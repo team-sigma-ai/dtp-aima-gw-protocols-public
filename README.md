@@ -4,7 +4,7 @@
 
 This repository provides the Protocol Buffer (protobuf) definitions for the AIMA Gateway.
 
-AIMA Gateway is a service designed to facilitate efficient communication between external systems and our AIMA platform using either gRPC or REST. 
+AIMA Gateway is a service designed to facilitate efficient communication between external systems and our AIMA platform using either gRPC or REST.
 
 Its protobuf definitions specify structured data contracts to ensure consistent, reliable, and backward-compatible integrations.
 
@@ -17,8 +17,8 @@ If you are unable to use gRPC, you can also use our REST endpoints, though we re
 
 ## See also
 
-- Protocol Buffers: https://protobuf.dev/
-- gRPC: https://grpc.io/
+- Protocol Buffers: <https://protobuf.dev/>
+- gRPC: <https://grpc.io/>
 - Shared Protocol models: [aima-gateway-protocols-shared](https://github.com/team-sigma-ai/dtp-aima-gw-protocols-shared)
 
 ## Notes
@@ -34,13 +34,15 @@ These protocols adhere to the following standards:
 
 We use versioning for individual endpoints within a server namespace to ensure controlled updates and backward compatibility.
 
-### Guidelines:
+### Guidelines
+
 - The server namespace includes the version e.g. `ai.sigmafinancial.aima.v1.generative.services.Generative`
 - Breaking changes to an endpoint results in a new version being created for only that endpoint.
 
-### Example:
-- If a breaking change is made to `v1.generative.services.Generative.ChatStreaming`, 
-- A new version will be introduced as `v2.generative.services.Generative.ChatStreaming`. 
+### Example
+
+- If a breaking change is made to `v1.generative.services.Generative.ChatStreaming`,
+- A new version will be introduced as `v2.generative.services.Generative.ChatStreaming`.
 - Other endpoints in `v1.generative.services.Generative` will remain at `v1` unless further changes are required.
 
 Minor updates, such as adding new fields to responses or optional fields
@@ -49,11 +51,13 @@ Minor updates, such as adding new fields to responses or optional fields
 
 We only provide support for `N-1` versions: the current version (`N`) and the previous version (`N-1`).
 
-### Process:
+### Process
+
 - When a new version (e.g. `v3`) is released, the oldest version (`v1`) will be deprecated and removed after **three months**.
 - Notices will be sent via email to accounts at least three months prior to removal.
 
-### Action Required:
+### Action Required
+
 - Update to at least the next version (`N-1`), but we strongly recommend upgrading to the latest version (`N`).
 - While deprecated endpoints may continue to function, there will be no support for these, and could be removed at any time.
 
@@ -64,11 +68,10 @@ Ensure that you have set your `protoc` search path to include the parent folder 
 
 Example if your folder structure is like the one below, set your search path to include `aima-gateway-protos`.
 
-```
+```text
 aima-gateway-protos
 |
 +---- dtp-aima-gw-protocols-shared
 |
 \---- dtp-aima-gw-protocols-public
 ```
-
