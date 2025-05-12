@@ -1,0 +1,88 @@
+syntax = "proto3";
+
+package ai.sigmafinancial.aima.v1.generative.services;
+
+import "dtp-aima-gw-protocols-shared/proto/v1/common.proto";
+
+service Generative {
+    rpc GetReportCreditEstimate (GetReportCreditEstimateRequest) returns (GetReportCreditEstimateResponse);
+    rpc ScheduleReportRaw (ScheduleReportGenerationRequest) returns (common.Empty);
+    rpc ScheduleWorkflowRun (ScheduleReportGenerationRequest) returns (common.Empty);
+    rpc ViewWorkflow (ViewWorkflowRequest) returns (ViewWorkflowResponse);
+    rpc InvokeWorkflow (WorkflowRequest) returns (common.ReportResponse);
+    rpc InvokeWorkflowStreaming (WorkflowRequest) returns (stream StreamingWorkflowResponse);
+    rpc Chat (ChatRequest) returns (ChatResponse);
+    rpc ChatStreaming (ChatRequest) returns (stream StreamingChatResponse);
+}
+
+// Estimate the cost of generating a specific report
+message GetReportCreditEstimateRequest {
+    // Report configuration
+    string report_configuration = 1;
+}
+
+message GetReportCreditEstimateResponse {
+    // The estimated cost of generating the report
+    int32 credit_cost = 1;
+}
+
+// Schedule the generation of a report
+message ScheduleReportGenerationRequest {
+    // Report configuration
+    string report_configuration = 1;
+}
+
+message ScheduleWorkflowRequest {
+    string workflow_id = 1;
+    map<string, string> parameters = 5;
+    // Add additional parameters required to schedule
+}
+
+message WorkflowRequest {
+    string workflow_id = 1;
+    map<string, string> parameters = 5;
+}
+
+message ViewWorkflowRequest {
+    string workflow_id = 1;
+}
+
+message ViewWorkflowResponse {
+    repeated Parameter parameters = 1;
+}
+
+message Parameter {
+    string name = 1;
+    Type type = 2;
+    bool optional = 3;
+    repeated string allowed_values = 4;
+}
+
+enum Type {
+    String = 0;
+    Boolean = 1;
+    Array = 2;
+    Integer = 3;
+    Float = 4;
+}
+
+message StreamingWorkflowResponse {
+    string buffer = 1;
+    bool final = 5;
+}
+
+message ChatRequest {
+    string chat_workflow = 1;
+    string question = 5;
+    string context = 10;
+    map<string, string> parameters = 15;
+}
+
+message ChatResponse {
+    string answer = 1;
+}
+
+message StreamingChatResponse {
+    string buffer = 1;
+    bool final = 5;
+}

@@ -1,0 +1,41 @@
+syntax = "proto3";
+
+package ai.sigmafinancial.aima.v1.auth;
+
+
+message Token {
+    // Token payload
+    TokenData data = 5;
+    // Token signature
+    string signature = 10;
+}
+
+message TokenData {
+    // The token ID
+    string id = 1;
+    // The ID of the system that signed the token
+    string token_signature_id = 5;
+    // The App Key used to create the token
+    string derived_from = 10;
+    // When the token was issued
+    int64 created = 15;
+    // When the token expires
+    int64 expires = 20;
+    // The scopes the token is valid for
+    repeated int32 scope = 25;
+}
+
+message AppKey {
+    // The App Key ID
+    string id = 1;
+    // The account this key pertains to
+    string account_id = 3;
+    // The private part, this field is only returned on creation of a key.
+    string secret = 5;
+    // The public part of the key pair
+    string public = 10;
+    // When the keypair was issued
+    int64 created = 15;
+    // The scopes the keypair can issue tokens for
+    repeated int32 scope = 30;
+}

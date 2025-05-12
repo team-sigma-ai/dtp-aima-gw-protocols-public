@@ -1,0 +1,225 @@
+syntax = "proto3";
+
+package ai.sigmafinancial.aima.v1.management.delivery.services;
+
+import "dtp-aima-gw-protocols-shared/proto/v1/common.proto";
+
+service Delivery {
+    // List Buckets
+    rpc ListBuckets (common.Empty) returns (ListBucketsResponse);
+    // Create a new Bucket
+    rpc CreateBucket (CreateBucketRequest) returns (common.Empty);
+    // Delete a Bucket, can only be done if the bucket is not in use
+    rpc DeleteBucket (DeleteBucketRequest) returns (common.Empty);
+
+    // List Cross-Account Roles
+    rpc ListXARoles (ListXARolesRequest) returns (ListXARolesResponse);
+    // List Bucket Provider Credentials
+    rpc ListBucketProviderCredentials (common.Empty) returns (ListBucketProviderCredentialsResponse);
+    // Delete a Bucket Provider Credential, can only be done if the credential is not in use
+    rpc DeleteBucketProviderCredentials (DeleteBucketProviderCredentialsRequest) returns (common.Empty);
+    // Create a new Bucket Provider Credential
+    rpc CreateBucketProviderCredentials (CreateBucketProviderCredentialsRequest) returns (common.Empty);
+    // Create XA-Role
+    rpc CreateXARole (CreateXARoleRequest) returns (common.Empty);
+    // Delete XA-Role
+    rpc DeleteXARole (DeleteXARoleRequest) returns (common.Empty);
+    // Test a Cross-Account Role by listing and writing a sample file to a bucket
+    rpc TestXARole (TestXARoleRequest) returns (common.Empty);
+
+    // SMTP Destinations
+
+    // List SMTP Destinations
+    rpc ListSMTPDestinations (common.Empty) returns (ListSMTPDestinationsResponse);
+    // Create a new SMTP destination
+    rpc CreateSMTPDestination (CreateSMTPDestinationRequest) returns (common.Empty);
+    // Modify an existing SMTP destination
+    rpc UpdateSMTPDestination (SMTPDestination) returns (common.Empty);
+    // Delete an SMTP destination, can only be done if the destination is not in use by a scheduled report
+    rpc DeleteSMTPDestination (UseSMTPDestinationRequest) returns (common.Empty);
+    // A test email will be sent to the destination with a sample Markdown attachment
+    rpc TestSMTPDestination (UseSMTPDestinationRequest) returns (common.Empty);
+}
+
+message Bucket {
+    // The ID of the bucket
+    int64 id = 1;
+    // The name of the bucket
+    string name = 5;
+    // The ID of the account that owns the bucket
+    string account_id = 10;
+    // The region of the bucket (if applicable)
+    string region = 15;
+    // Override the base URL of the service
+    string base_url = 20;
+    // The key in the bucket to use as the root
+    string root_key = 25;
+    // The credentials used to access the bucket
+    BucketProviderCredentials credentials = 30;
+}
+
+message BucketProviderCredentials {
+    string id = 1;
+    oneof credentials {
+        // The AWS credentials
+        AwsBucketProviderCredentials aws = 5;
+        // The GCP credentials
+        GcpBucketProviderCredentials gcp = 10;
+        // The Azure credentials, account name and key
+        KeyPair azure = 15;
+        // Backblaze credentials, application key and key ID
+        KeyPair backblaze = 20;
+    }
+}
+
+// Generic Key Pair for credentials
+message KeyPair {
+    string key_id = 1;
+    string secret = 5;
+}
+
+// AWS specific credential configuration
+message AwsBucketProviderCredentials {
+    oneof credentials {
+        // The access/secret key
+        KeyPair access_key = 1;
+        // The XA-Role ID
+        string xa_role_id = 5;
+    }
+}
+
+// GCP specific configuration
+message GcpBucketProviderCredentials {
+    // The service account key
+    string service_account_key = 1;
+}
+
+message ListBucketsResponse {
+    // The buckets that match the request
+    repeated Bucket buckets = 1;
+}
+
+message CreateBucketRequest {
+    // The name of the bucket
+    string name = 1;
+    // The region of the bucket
+    string region = 5;
+    // The credentials to use with the bucket
+    string credentials_id = 10;
+}
+
+message DeleteBucketRequest {
+    // The ID of the bucket to delete
+    int64 bucket_id = 1;
+}
+
+message ListXARolesRequest {
+    // Filter the roles by account ID
+    string account_id = 1;
+}
+
+// Cross-Account Role configuration
+message XARole {
+    // The ID of the role
+    string id = 1;
+    // The name of the role
+    string name = 5;
+    // The ID of the account that owns the role
+    string account_id = 10;
+    // The ARN of the role
+    string arn = 15;
+}
+
+// Lists the Cross-Account roles that match the given filters, if any
+message ListXARolesResponse {
+    // The roles that match the request
+    repeated XARole roles = 1;
+}
+
+// Lists the Bucket Provider Credentials, secrets are never populated in the response
+message ListBucketProviderCredentialsResponse {
+    repeated BucketProviderCredentials credentials = 1;
+}
+
+message CreateBucketProviderCredentialsRequest {
+    oneof credentials {
+        // AWS credentials
+        AwsBucketProviderCredentials aws = 5;
+        // GCP credentials
+        GcpBucketProviderCredentials gcp = 10;
+        // Azure credentials
+        KeyPair azure = 15;
+        // Backblaze credentials
+        KeyPair backblaze = 20;
+    }
+}
+
+message DeleteBucketProviderCredentialsRequest {
+    // The ID of the credentials to delete
+    string credentials_id = 1;
+}
+
+message CreateXARoleRequest {
+    // The name of the role
+    string name = 1;
+    // The ID of the account that owns the role
+    string account_id = 5;
+    // The ARN of the role
+    string arn = 10;
+}
+
+message DeleteXARoleRequest {
+    // The ID of the role to delete
+    string role_id = 1;
+}
+
+message TestXARoleRequest {
+    // The ID of the role to test
+    string role_id = 1;
+    // The bucket to test the role with
+    string bucket_name = 5;
+    // The region of the bucket
+    string region = 10;
+    // The key to use as the root
+    string root_key = 15;
+}
+
+
+message ListSMTPDestinationsResponse {
+    // The SMTP destinations that match the request
+    repeated SMTPDestination destinations = 1;
+}
+
+message SMTPDestination {
+    // The ID of the destination
+    string id = 1;
+    // The name of the destination
+    string name = 5;
+    // The email address of the destination
+    string email = 10;
+    // Compress the attachment before sending?
+    CompressionType compress = 15;
+}
+
+enum CompressionType {
+    // No compression
+    COMPRESSION_TYPE_NONE = 0;
+    // A single Markdown text file inside a ZIP file (.zip)
+    COMPRESSION_TYPE_ZIP = 1;
+    // A single Markdown text file that has been GZIP compressed (.md.gz)
+    COMPRESSION_TYPE_TAR_GZIP = 2;
+}
+
+message CreateSMTPDestinationRequest {
+    // The name of the destination
+    string name = 1;
+    // The email address of the destination
+    string email = 5;
+    // Compress the attachment before sending?
+    CompressionType compress = 10;
+}
+
+message UseSMTPDestinationRequest {
+    // The ID of the destination to test/delete
+    string destination_id = 1;
+}

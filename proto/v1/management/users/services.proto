@@ -1,0 +1,114 @@
+syntax = "proto3";
+
+package ai.sigmafinancial.aima.v1.management.user.services;
+
+import "dtp-aima-gw-protocols-public/proto/v1/user.proto";
+import "dtp-aima-gw-protocols-shared/proto/v1/common.proto";
+
+service UserManagement {
+    // Accounts
+    rpc ListAccounts (ListAccountsRequest) returns (ListAccountsResponse);
+    rpc CreateAccount (CreateAccountRequest) returns (CreateAccountResponse);
+
+
+    // Users
+    rpc ListUsers (ListUsersRequest) returns (ListUserResponse);
+    rpc DeleteUser (DeleteEntryRequest) returns (common.Empty);
+
+    // Invites
+    rpc ListInvites (common.Empty) returns (ListInvitesResponse);
+    rpc InviteUser (InviteUserRequest) returns (common.Empty);
+    rpc DeleteInvite (DeleteEntryRequest) returns (common.Empty);
+
+    // Invite Allow/Deny Lists
+
+    // List the domains that can signup via SSO or the denied email addresses from deleted users
+    rpc ListEmailEntryList (ListEmailEntriesRequest) returns (ListEmailEntriesResponse);
+    // Add or remove an email or domain from the allow/deny list
+    rpc UpdateEmailEntries (EmailListEntryRequest) returns (common.Empty);
+}
+
+message ListAccountsRequest {
+    // If empty, returns all accounts that you have access to, otherwise only the child accounts of the specified ID
+    string parent_account = 1;
+}
+
+message ListAccountsResponse {
+    repeated .ai.sigmafinancial.aima.v1.user.Account accounts = 1;
+}
+
+message CreateAccountRequest {
+    ai.sigmafinancial.aima.v1.user.NewAccount create = 1;
+}
+
+message CreateAccountResponse {
+    ai.sigmafinancial.aima.v1.user.Account created = 1;
+}
+
+
+// Lists the keys that match the given filters, if any
+message ListUsersRequest {
+    // Filters the keys by scope if provided
+    repeated int32 scope = 1;
+    // Filters the users by when they were created
+    int64 created_after = 5;
+    // Filter users by name
+    string name = 10;
+    // Filter users by email
+    string email = 15;
+}
+
+message ListUserResponse {
+    // The users that match the request
+    repeated ai.sigmafinancial.aima.v1.user.User users = 1;
+}
+
+// Invites a user to the system, an email will be sent to the user
+// containing a link to create an account,
+// By default the user will have no scope
+// after the user finishes sign-up you can assign a scope to the user
+message InviteUserRequest {
+    // The email of the user to invite
+    string email = 1;
+    // The name of the person to invite
+    string name = 5;
+}
+
+message ListInvitesResponse {
+    // The invites that match the request
+    repeated Invite invites = 1;
+}
+
+message Invite {
+    // The ID of the invite
+    string id = 1;
+    // The email of the user that was invited
+    string email = 5;
+}
+
+// Deletes the user/invite with the given id,
+// it does _not_ delete the keys (and subsequently the tokens) created by the user
+// This also puts the email of the user in a blacklist so the user can't sign up again
+message DeleteEntryRequest {
+    // The User ID or invite ID to delete
+    string entry_id = 1;
+}
+
+// Lists the Allow/Deny list of emails or domains
+message ListEmailEntriesRequest {
+    bool deny_list = 1;
+}
+
+message ListEmailEntriesResponse {
+    repeated string email_or_domain = 1;
+}
+
+// Deletes the entry from the Allow/Deny list
+message EmailListEntryRequest {
+    // Domain for the allow list, email address for the deny list
+    string email_or_domain = 1;
+    // Specify which list to delete from
+    bool deny_list = 5;
+    // If true, the entry will be deleted from the list
+    bool delete = 10;
+}

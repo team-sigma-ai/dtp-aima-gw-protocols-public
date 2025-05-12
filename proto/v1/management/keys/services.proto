@@ -1,0 +1,76 @@
+syntax = "proto3";
+
+package ai.sigmafinancial.aima.v1.management.key.services;
+
+import "dtp-aima-gw-protocols-public/proto/v1/auth.proto";
+import "dtp-aima-gw-protocols-shared/proto/v1/common.proto";
+
+service KeyManagement {
+    rpc List (ListKeysRequest) returns (ListKeysResponse);
+    rpc Create (CreateKeyRequest) returns (CreateKeyResponse);
+    rpc Delete (DeleteKeysRequest) returns (common.Empty);
+    rpc IssueToken (IssueTokenRequest) returns (IssueTokenResponse);
+}
+
+// Lists the keys that match the given filters, if any
+message ListKeysRequest {
+    // Filters the keys by scope if provided
+    repeated int32 scope = 1;
+    // Filters the keys by when they were created or expire
+    int64 created_after = 5;
+    int64 expires_before = 10;
+}
+
+message ListKeysResponse {
+    // The keys that match the request
+    repeated auth.AppKey keys = 1;
+}
+
+// Creates a new key with the given scope and expiration time (if none is provided, the key will never expire)
+// A new key can never have more scope than the one of the key used to create it, only the same or smaller.
+message CreateKeyRequest {
+    // The scope of the key
+    repeated int32 scope = 1;
+    // The time the key will expire
+    int64 expires = 5;
+}
+
+message CreateKeyResponse {
+    // The key that was created
+    auth.AppKey key = 1;
+}
+
+// Deletes the keys with the given key_ids
+// This will immediately invalidate the keys
+// and any tokens created with them
+message DeleteKeysRequest {
+    // The keys to delete
+    repeated string key_ids = 1;
+}
+
+message IssueTokenRequest {
+    // The API Key ID to create a token from
+    string app_key_id = 1;
+
+    // The current time in epoch seconds, max allowed clock-skew with server is 60 seconds.
+    int64 epoch_time = 3;
+
+    // Number used once, sending the request again with the same nonce will be refused.
+    int64 nonce = 4;
+
+    // Generate a signature string by concatenating "{app_key_id}{epoch_time}{nonce}"
+    // and signing the resulting string with the private key part of the App Key
+    string signature = 5;
+
+    // The scopes the token should have
+    repeated int32 scope = 10;
+
+    // The duration (in seconds) the token should live for
+    int64 life_span = 15;
+
+}
+
+message IssueTokenResponse {
+    // The token that was created
+    auth.Token token = 1;
+}

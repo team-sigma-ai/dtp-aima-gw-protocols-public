@@ -1,0 +1,14 @@
+syntax = "proto3";
+
+package ai.sigmafinancial.aima.v1.management.accounting.services;
+
+import "dtp-aima-gw-protocols-shared/proto/v1/common.proto";
+
+service Accounting {
+  rpc GetAvailableCredits (common.Empty) returns (GetAvailableCreditsResponse);
+}
+
+message GetAvailableCreditsResponse {
+  // The number of credits available
+  int32 credits = 1;
+}
