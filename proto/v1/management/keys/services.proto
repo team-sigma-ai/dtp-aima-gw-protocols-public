@@ -16,6 +16,8 @@ service KeyManagement {
 message ListKeysRequest {
     // Filters the keys by scope if provided
     repeated int32 scope = 1;
+    // Filters the keys by ID if provided
+    repeated string id = 2;
     // Filters the keys by when they were created or expire
     int64 created_after = 5;
     int64 expires_before = 10;
