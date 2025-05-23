@@ -10,6 +10,9 @@ service KeyManagement {
     rpc Create (CreateKeyRequest) returns (CreateKeyResponse);
     rpc Delete (DeleteKeysRequest) returns (common.Empty);
     rpc IssueToken (IssueTokenRequest) returns (IssueTokenResponse);
+    // Verify that a token contains a valid signature. Token should be extracted
+    // from auth header in request.
+    rpc VerifyToken (common.Empty) returns (VerifyTokenResponse);
 }
 
 // Lists the keys that match the given filters, if any
@@ -75,4 +78,9 @@ message IssueTokenRequest {
 message IssueTokenResponse {
     // The token that was created
     auth.Token token = 1;
+}
+
+message VerifyTokenResponse {
+    // The token that was verified, serialized as it should appear in an auth header.
+    string token = 1;
 }
