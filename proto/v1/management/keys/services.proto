@@ -38,6 +38,9 @@ message CreateKeyRequest {
     repeated int32 scope = 1;
     // The time the key will expire
     int64 expires = 5;
+    // The account this key will belong to, it can only be the account used to create it, or a child account
+    // If not provided, it will belong to the account that owns the key used to call this endpoint
+    string account_id = 10;
 }
 
 message CreateKeyResponse {
