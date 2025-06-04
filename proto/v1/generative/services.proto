@@ -33,18 +33,18 @@ message ScheduleReportGenerationRequest {
 }
 
 message ScheduleWorkflowRequest {
-    string workflow_name = 1;
+    string workflow_id = 1;
     map<string, string> parameters = 5;
     // Add additional parameters required to schedule
 }
 
 message WorkflowRequest {
-    string workflow_name = 1;
+    string workflow_id = 1;
     map<string, string> parameters = 5;
 }
 
 message ViewWorkflowRequest {
-    string workflow_name = 1;
+    string workflow_id = 1;
 }
 
 message ViewWorkflowResponse {
