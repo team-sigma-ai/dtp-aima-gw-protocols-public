@@ -10,7 +10,6 @@ service UserManagement {
     rpc ListAccounts (ListAccountsRequest) returns (ListAccountsResponse);
     rpc CreateAccount (CreateAccountRequest) returns (CreateAccountResponse);
 
-
     // Users
     rpc ListUsers (ListUsersRequest) returns (ListUserResponse);
     rpc DeleteUser (DeleteEntryRequest) returns (common.Empty);
@@ -29,8 +28,25 @@ service UserManagement {
 }
 
 message ListAccountsRequest {
-    // If empty, returns all accounts that you have access to, otherwise only the child accounts of the specified ID
-    string parent_account = 1;
+    oneof search_type {
+        bool app_key_owner = 1;
+        ListChildAccounts child_accounts = 2;
+        ListSpecificAccounts specific_accounts = 3;
+    }
+}
+
+message ListChildAccounts {
+    // Restrict the child list to only accounts under this parent
+    // If empty, return all child accounts that are under the app key owner
+    string parent_id = 1;
+    // Limit the depth of the search to a value, if 0 (default) all children are returned.
+    // If a parent ID is specified, the depth starts at that level.
+    // Otherwise, the depth is calculated from the app key owner level.
+    uint32 depth = 2;
+}
+
+message ListSpecificAccounts {
+    repeated string account_id_list = 1;
 }
 
 message ListAccountsResponse {
