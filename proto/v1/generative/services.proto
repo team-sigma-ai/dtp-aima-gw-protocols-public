@@ -44,11 +44,18 @@ message WorkflowRequest {
 }
 
 message ViewWorkflowRequest {
+    // Leave empty to view all workflow associated with account
     string workflow_id = 1;
 }
 
 message ViewWorkflowResponse {
-    repeated Parameter parameters = 1;
+    repeated Workflow workflows = 1;
+}
+
+message Workflow {
+    string id = 1;
+    string name = 2;
+    repeated Parameter parameters = 3;
 }
 
 message Parameter {
