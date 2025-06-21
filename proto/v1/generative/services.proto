@@ -80,9 +80,18 @@ message StreamingWorkflowResponse {
 
 message ChatRequest {
     string chat_workflow = 1;
-    string question = 5;
-    string context = 10;
+    repeated ChatMessage message = 10;
     map<string, string> parameters = 15;
+}
+
+message ChatMessage {
+    ChatRole role = 1;
+    string content = 2;
+}
+
+enum ChatRole {
+    CHAT_ROLE_USER = 0;
+    CHAT_ROLE_ASSISTANT = 1;
 }
 
 message ChatResponse {
