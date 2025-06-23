@@ -68,7 +68,6 @@ message Parameter {
 enum Type {
     String = 0;
     Boolean = 1;
-    Array = 2;
     Integer = 3;
     Float = 4;
 }

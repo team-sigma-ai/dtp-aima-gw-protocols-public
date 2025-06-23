@@ -1,0 +1,30 @@
+syntax = "proto3";
+
+package ai.sigmafinancial.aima.v2.management.key.services;
+
+service KeyManagement {
+    rpc IssueToken (IssueTokenRequest) returns (IssueTokenResponse);
+}
+
+message IssueTokenRequest {
+    // The API Key ID to create a token from
+    string app_key_id = 1;
+
+    // The current time in epoch seconds, max allowed clock-skew with server is 60 seconds.
+    int64 epoch_time = 3;
+
+    // Number used once, sending the request again with the same nonce will be refused.
+    int64 nonce = 4;
+
+    // Generate a signature string by concatenating "{app_key_id}{epoch_time}{nonce}"
+    // and signing the resulting string with the private key part of the App Key
+    string signature = 5;
+
+    // The duration (in seconds) the token should live for
+    int64 life_span = 15;
+
+}
+message IssueTokenResponse {
+    // A base64 encoded token that can be used directly in the `authorization` header
+    string token = 1;
+}
