@@ -8,6 +8,7 @@ service Generative {
     rpc GetReportCreditEstimate (GetReportCreditEstimateRequest) returns (GetReportCreditEstimateResponse);
     rpc ScheduleReportRaw (ScheduleReportGenerationRequest) returns (common.Empty);
     rpc ScheduleWorkflowRun (ScheduleReportGenerationRequest) returns (common.Empty);
+    // Get workflow metadata.
     rpc ViewWorkflow (ViewWorkflowRequest) returns (ViewWorkflowResponse);
     rpc InvokeWorkflow (WorkflowRequest) returns (common.ReportResponse);
     rpc InvokeWorkflowStreaming (WorkflowRequest) returns (stream StreamingWorkflowResponse);
@@ -43,34 +44,59 @@ message WorkflowRequest {
     map<string, string> parameters = 5;
 }
 
+// Request for getting workflow metadata
 message ViewWorkflowRequest {
-    // Leave empty to view all workflow associated with account
+    // The ID of the workflow being interrogated.
+    // 
+    // Leave empty to view all workflows associated with account.
     string workflow_id = 1;
 }
 
+// Response for getting workflow metadata
 message ViewWorkflowResponse {
     repeated Workflow workflows = 1;
 }
 
+// The metadata associated with a given workflow.
 message Workflow {
+    // The workflow's ID.
     string id = 1;
+    // The workflow's human-readable name.
     string name = 2;
-    repeated Parameter parameters = 3;
+    // The parameters that can/should be passed to the workflow.
+    repeated WorkflowParameter parameters = 3;
 }
 
-message Parameter {
+// A parameter to be passed to a workflow.
+message WorkflowParameter {
+    // The name of the parameter.
     string name = 1;
-    Type type = 2;
-    bool optional = 3;
-    repeated string allowed_values = 4;
+    // The type of the parameter.
+    WorkflowParameterType type = 2;
+    // The parameter's default value (parsed into a string).
+    //
+    // If the parameter has no default value - and so is non-optional - then
+    // this will be an empty string.
+    string default_value = 3;
+    // An example value for the parameter (parsed into a string).
+    //
+    // If the parameter has no example value then this will be an empty string.
+    string example_value = 4;
+    // Allowed values for this parameter (parsed into strings).
+    //
+    // If the parameter has no allowed values - i.e. it's unconstrained - then
+    // this will be an empty list.
+    repeated string allowed_values = 5;
 }
 
-enum Type {
-    String = 0;
-    Boolean = 1;
-    Array = 2;
-    Integer = 3;
-    Float = 4;
+// Possible types for a workflow parameter.
+enum WorkflowParameterType {
+    BOOLEAN = 0;
+    INTEGER = 1;
+    FLOAT = 2;
+    STRING = 3;
+    ARRAY = 4;
+    OBJECT = 5;
 }
 
 message StreamingWorkflowResponse {
