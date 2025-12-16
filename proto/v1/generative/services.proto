@@ -87,16 +87,18 @@ message WorkflowParameter {
     // If the parameter has no allowed values - i.e. it's unconstrained - then
     // this will be an empty list.
     repeated string allowed_values = 5;
+    // Determines if the parameter takes a Vector or Array of primitive types
+    bool is_array = 6;
 }
 
 // Possible types for a workflow parameter.
 enum WorkflowParameterType {
-    BOOLEAN = 0;
-    INTEGER = 1;
-    FLOAT = 2;
-    STRING = 3;
-    ARRAY = 4;
-    OBJECT = 5;
+	reserved 4;
+    WORKFLOW_PARAMETER_TYPE_BOOLEAN = 0;
+    WORKFLOW_PARAMETER_TYPE_INTEGER = 1;
+    WORKFLOW_PARAMETER_TYPE_FLOAT = 2;
+    WORKFLOW_PARAMETER_TYPE_STRING = 3;
+    WORKFLOW_PARAMETER_TYPE_OBJECT = 5;
 }
 
 message StreamingWorkflowResponse {
