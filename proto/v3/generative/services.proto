@@ -3,20 +3,22 @@ syntax = "proto3";
 package ai.sigmafinancial.aima.v3.generative.services;
 
 // ─────────────────────────────────────────────────────────────────────────
-// Generative v3
+// Generative v3 — public service.
+//
+// The request/response message types live in `shared` (see
+// dtp-aima-gw-protocols-shared/proto/v3/generative/messages.proto) and are
+// imported here under the same package. This lets private/internal contracts
+// reuse the identical shapes and wrap them with fields that are not exposed
+// via this customer-facing API.
 //
 // v3 makes both halves of a workflow self-describing:
 //   * ViewWorkflow returns, per workflow, the SCHEMA of its input parameters
-//     AND of its response structure (FieldSchema / TypeSpec trees). JSON
-//     Schema can be derived from these at runtime — no inference needed.
-//   * InvokeWorkflow returns a StructuredReportResponse whose `content` is a
-//     strongly-typed value tree (FieldValue) that conforms to that schema.
-//
-// The schema side and the value side are structurally isomorphic
-// (scalar / object / array in both), so a consumer co-walks them: iterate the
-// ordered ObjectSchema.fields for names and types, look up each value by key
-// in ObjectValue.fields, and bind into the UI.
+//     AND of its response structure.
+//   * InvokeWorkflow returns a strongly-typed structured response whose
+//     `content` conforms to that schema.
 // ─────────────────────────────────────────────────────────────────────────
+
+import "dtp-aima-gw-protocols-shared/proto/v3/generative/messages.proto";
 
 service Generative {
     // Get workflow metadata: input-parameter schema and response schema.
@@ -24,152 +26,4 @@ service Generative {
 
     // Run a workflow and return its strongly-typed structured response.
     rpc InvokeWorkflow (InvokeWorkflowRequest) returns (InvokeWorkflowResponse);
-}
-
-// ─────────────────────────────────────────────────────────────────────────
-// ViewWorkflow
-// ─────────────────────────────────────────────────────────────────────────
-
-// Request for getting workflow metadata.
-message ViewWorkflowRequest {
-    // The ID of the workflow being interrogated.
-    //
-    // Leave empty to view all workflows associated with the account.
-    string workflow_id = 1;
-}
-
-// Response for getting workflow metadata.
-message ViewWorkflowResponse {
-    // Mapped by the ID of the workflow
-    map<string, Workflow> workflows = 1;
-}
-
-// The metadata associated with a given workflow.
-message Workflow {
-    // The workflow's ID.
-    string id = 1;
-    // The workflow's human-readable name.
-    string name = 2;
-
-    // The input form: each parameter is a named, optionally-defaulted field.
-    repeated FieldSchema parameters = 3;
-
-    // The shape of InvokeWorkflowResponse.content for this workflow. Always
-    // an object at the top level. JSON Schema is derived from this at runtime;
-    // no separate response_schema string is stored.
-    ObjectSchema response = 4;
-}
-
-// ─────────────────────────────────────────────────────────────────────────
-// InvokeWorkflow
-// ─────────────────────────────────────────────────────────────────────────
-
-// Request to run a workflow. Parameter values are supplied as a typed value
-// tree so int vs double (and nesting) survive without coercion.
-message InvokeWorkflowRequest {
-    string workflow_id = 1;
-    ObjectValue parameters = 2;
-}
-
-// ─────────────────────────────────────────────────────────────────────────
-// SCHEMA SIDE — describes the *shape* of a value.
-// Reused for both workflow input parameters and response-field structure.
-// ─────────────────────────────────────────────────────────────────────────
-
-// Primitive leaf types. JSON has no int/float distinction, so INT is used when
-// every value is whole and DOUBLE when any value is fractional.
-enum ScalarType {
-    SCALAR_TYPE_UNSPECIFIED = 0;
-    SCALAR_TYPE_STRING      = 1;
-    SCALAR_TYPE_INT         = 2;  // 64-bit signed (see FieldValue.int_value)
-    SCALAR_TYPE_DOUBLE      = 3;
-    SCALAR_TYPE_BOOL        = 4;
-}
-
-// The shape of a value, independent of name / optionality / default. Exactly
-// one variant is set. Recursive: objects hold named fields, arrays hold an
-// element TypeSpec, so arrays-of-objects and nested arrays are expressible.
-message TypeSpec {
-    oneof kind {
-        ScalarType   scalar = 1;
-        ObjectSchema object = 2;
-        ArraySchema  array  = 3;
-    }
-}
-
-// A named member of an object — and the top-level form of an input parameter.
-message FieldSchema {
-    // JSON key / parameter name.
-    string name = 1;
-    // This field's type.
-    TypeSpec type = 2;
-    // True => must be present (JSON Schema `required`). False => optional.
-    bool required = 3;
-    // Default value. Unset => no default. Mainly meaningful for inputs.
-    FieldValue default = 4;
-    // Example value. Unset => no example.
-    FieldValue example = 5;
-    // Enum constraint. Empty => unconstrained.
-    repeated FieldValue allowed_values = 6;
-    // Optional human-readable description (UI tooltips / docs).
-    string description = 7;
-}
-
-// An object's members. `fields` is a list purely for wire encoding; field
-// order carries no meaning and consumers _must not_ rely on it. Match members
-// by `name` against the corresponding ObjectValue.fields map. Relying on field
-// order is undefined behaviour.
-message ObjectSchema {
-    repeated FieldSchema fields = 1;
-}
-
-// A homogeneous list. The element is unnamed, hence a bare TypeSpec.
-message ArraySchema {
-    TypeSpec element = 1;
-}
-
-// ─────────────────────────────────────────────────────────────────────────
-// VALUE SIDE — carries actual data.
-// Used for parameter defaults / examples above, for request parameter values,
-// and as the response payload. Strongly typed so int vs double survives
-// round-trips (unlike google.protobuf.Struct). An unset `value` oneof means
-// JSON null / absent.
-// ─────────────────────────────────────────────────────────────────────────
-
-message FieldValue {
-    oneof value {
-        string      string_value = 1;
-        int64       int_value    = 2;
-        double      double_value = 3;
-        bool        bool_value   = 4;
-        ObjectValue object_value = 5;
-        ArrayValue  array_value  = 6;
-    }
-}
-
-message ObjectValue {
-    // Keyed lookup; ordering is owned by the matching ObjectSchema.fields.
-    map<string, FieldValue> fields = 1;
-}
-
-message ArrayValue {
-    repeated FieldValue values = 1;
-}
-
-// ─────────────────────────────────────────────────────────────────────────
-// RESPONSE PAYLOAD — what a workflow run actually returns.
-// `content` is workflow-specific (described by Workflow.response);
-// `metadata` is fixed across all workflows.
-// ─────────────────────────────────────────────────────────────────────────
-
-message InvokeWorkflowResponse {
-    ObjectValue    content  = 1;
-    ReportMetadata metadata = 2;
-}
-
-message ReportMetadata {
-    string report_id    = 1;
-    string node_id      = 2;
-    int64  generated_at = 3;  // unix epoch
-    string generated_by = 4;
 }
