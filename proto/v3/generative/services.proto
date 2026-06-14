@@ -7,9 +7,8 @@ package ai.sigmafinancial.aima.v3.generative.services;
 //
 // The request/response message types live in `shared` (see
 // dtp-aima-gw-protocols-shared/proto/v3/generative/messages.proto) and are
-// imported here under the same package. This lets private/internal contracts
-// reuse the identical shapes and wrap them with fields that are not exposed
-// via this customer-facing API.
+// imported here under the same package, so they can be reused across multiple
+// service versions.
 //
 // v3 makes both halves of a workflow self-describing:
 //   * ViewWorkflow returns, per workflow, the SCHEMA of its input parameters
