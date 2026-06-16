@@ -3,6 +3,7 @@ syntax = "proto3";
 package ai.sigmafinancial.aima.v1.generative.services;
 
 import "dtp-aima-gw-protocols-shared/proto/v1/common.proto";
+import "dtp-aima-gw-protocols-shared/proto/v3/generative/messages.proto";
 
 service Generative {
     rpc GetReportCreditEstimate (GetReportCreditEstimateRequest) returns (GetReportCreditEstimateResponse);
@@ -11,6 +12,12 @@ service Generative {
     // Get workflow metadata.
     rpc ViewWorkflow (ViewWorkflowRequest) returns (ViewWorkflowResponse);
     rpc InvokeWorkflow (WorkflowRequest) returns (common.ReportResponse);
+    // Dispatch a workflow run asynchronously and return a Job ID immediately.
+    // Takes the v3 InvokeWorkflow request so typed parameters survive, and the
+    // run produces a v3 InvokeWorkflowResponse collected via the result RPC.
+    rpc InvokeWorkflowAsync (ai.sigmafinancial.aima.v3.generative.services.InvokeWorkflowRequest) returns (InvokeWorkflowAsyncResponse);
+    // Collect the result of a previously dispatched async run by Job ID.
+    rpc InvokeWorkflowAsyncResult (InvokeWorkflowAsyncResultRequest) returns (InvokeWorkflowAsyncResultResponse);
     rpc InvokeWorkflowStreaming (WorkflowRequest) returns (stream StreamingWorkflowResponse);
     rpc Chat (ChatRequest) returns (ChatResponse);
     rpc ChatStreaming (ChatRequest) returns (stream StreamingChatResponse);
@@ -127,4 +134,24 @@ message ChatResponse {
 message StreamingChatResponse {
     string buffer = 1;
     bool final = 5;
+}
+
+message InvokeWorkflowAsyncResponse {
+    string job_id = 1;
+}
+
+message InvokeWorkflowAsyncResultRequest {
+    string workflow_id = 1;
+    string job_id = 2;
+}
+
+enum InvokeWorkflowAsyncResultStatus{
+    INVOKE_WORKFLOW_ASYNC_RESULT_STATUS_SUBMITTED = 0;
+    INVOKE_WORKFLOW_ASYNC_RESULT_STATUS_ERROR     = 1;
+    INVOKE_WORKFLOW_ASYNC_RESULT_STATUS_FINISHED  = 2;
+    INVOKE_WORKFLOW_ASYNC_RESULT_STATUS_NOT_FOUND = 3;
+}
+message InvokeWorkflowAsyncResultResponse {
+    InvokeWorkflowAsyncResultStatus status = 1;
+    ai.sigmafinancial.aima.v3.generative.services.InvokeWorkflowResponse result = 2;
 }
