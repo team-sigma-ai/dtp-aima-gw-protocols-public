@@ -1,0 +1,30 @@
+syntax = "proto3";
+
+// EXTERNAL, Kaizen/IRIS-facing corpus-retrieval chatbot.
+//
+// Ported from team-sigma-ai/sigma-retriever-sandbox
+// (proto/corpus_retrieval/external.proto).
+//
+// Minimal, stable, shippable surface. NO request config and NO eval RPCs —
+// claim/source attribution is delivered INSIDE the ChatV1 stream as a trailing
+// event. The backend is server-configured (author `[n]` markers + NLI verdicts
+// on the trailing event); there is deliberately no client-facing knob, so this
+// surface stays a clean handoff artifact. Internal eval knobs (RunConfig /
+// ReattributeV1) are eval-studio-internal and are NOT published here.
+package ai.sigmafinancial.aima.v2.corpus_retrieval.services;
+
+import "dtp-aima-gw-protocols-shared/proto/v2/corpus_retrieval.proto";
+
+service SigmaCorpusRetrievalChatbot {
+    // Start a retrieval-augmented chat run. The server streams ChatEventV1s
+    // (plan updates, tool calls/results, step transitions, answer deltas), then
+    // a terminal `result` (answer + sources), then a TRAILING `attribution`
+    // event (claims + NLI), then closes with OK.
+    rpc ChatV1 (ChatRequestV1) returns (stream corpus_retrieval.ChatEventV1);
+}
+
+// A self-contained, stateless request: the whole conversation so far. The
+// `messages` body is itself the request identity (no idempotency key).
+message ChatRequestV1 {
+    repeated corpus_retrieval.Message messages = 1;
+}
