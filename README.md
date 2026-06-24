@@ -21,23 +21,36 @@ If you are unable to use gRPC, you can also use our REST endpoints, though we re
 - gRPC: <https://grpc.io/>
 - Shared Protocol models: [aima-gateway-protocols-shared](https://github.com/team-sigma-ai/dtp-aima-gw-protocols-shared)
 
+## Contents
+
+The definitions are grouped by API version. Each version is an independent
+namespace under `ai.sigmafinancial.aima.<version>.<service>`.
+
+The order for repeated fields on the wire carries no meaning and must not be relied upon.
+
+e.g. if there is a `repeated <type> field = ...` you should not assume that the order of
+the elements in the array will be consistent between calls or 
+that they reflect the order of the elements in the input.
+
 ## Notes
 
 These protocols adhere to the following standards:
 
-- Protocol Version 3 only.
+- `proto3` syntax throughout.
 - Timestamp fields always:
-  - Use nanosecond Unix Epoch time.
+  - Use nanosecond Unix Epoch time except where explicitly stated.
   - Represent UTC.
 
 ## Versioning
 
-We use versioning for individual endpoints within a server namespace to ensure controlled updates and backward compatibility.
+We use versioning per namespace to ensure controlled updates and backward
+compatibility.
 
 ### Guidelines
 
 - The server namespace includes the version e.g. `ai.sigmafinancial.aima.v1.generative.services.Generative`
 - Breaking changes to an endpoint results in a new version being created for only that endpoint.
+- Fields starting with `internal_` are reserved for internal use and should not be relied upon as they can change without notice.
 
 ### Example
 
@@ -45,7 +58,8 @@ We use versioning for individual endpoints within a server namespace to ensure c
 - A new version will be introduced as `v2.generative.services.Generative.ChatStreaming`.
 - Other endpoints in `v1.generative.services.Generative` will remain at `v1` unless further changes are required.
 
-Minor updates, such as adding new fields to responses or optional fields
+Minor updates, such as adding new fields to responses or adding optional
+fields, are backward-compatible and do not result in a new version.
 
 ## Deprecation Policy
 
