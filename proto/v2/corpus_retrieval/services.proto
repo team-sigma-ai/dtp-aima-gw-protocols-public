@@ -1,22 +1,13 @@
 syntax = "proto3";
 
-// EXTERNAL, Kaizen/IRIS-facing corpus-retrieval chatbot.
+// External corpus-retrieval chatbot.
 //
-// Ported from team-sigma-ai/sigma-retriever-sandbox
-// (proto/corpus_retrieval/{external,common}.proto), consolidated into a single
-// self-contained file following the v2/generative precedent: the domain
-// messages live INLINE alongside the service (only truly-generic types belong
-// in -shared, and this contract uses none).
+// Minimal, stable surface: no request config and no eval RPCs. The backend is
+// server-configured (author `[n]` markers + NLI verdicts); there is deliberately
+// no client-facing knob.
 //
-// Minimal, stable, shippable surface. NO request config and NO eval RPCs —
-// claim/source attribution is delivered INSIDE the ChatV1 stream as a trailing
-// event. The backend is server-configured (author `[n]` markers + NLI verdicts
-// on the trailing event); there is deliberately no client-facing knob, so this
-// surface stays a clean handoff artifact. Internal eval knobs (RunConfig /
-// ReattributeV1) are eval-studio-internal and are NOT published here.
-//
-// Attribution rides the SAME ChatV1 stream as a TRAILING event (emitted AFTER
-// `result`) so per-claim NLI latency never blocks answer delivery.
+// Claim/source attribution rides the SAME ChatV1 stream as a TRAILING event
+// (emitted AFTER `result`) so per-claim NLI latency never blocks answer delivery.
 package ai.sigmafinancial.aima.v2.corpus_retrieval.services;
 
 service SigmaCorpusRetrievalChatbot {
@@ -117,10 +108,9 @@ message Source {
 
     // The source vendor's native, VERSION-QUALIFIED document identifier. Opaque,
     // so it stays agnostic to the third party — it already pins the exact version
-    // retrieved; consumers parse any date / qualifier out of it themselves. For
-    // Single Rulebook this is the Kaizen document slug joined with its version
-    // date, e.g. "esma70-156-4572-...-pdf/2021-09-29" (see VENDOR_DOCUMENT_ID.md;
-    // the "/" separator is provisional).
+    // retrieved; consumers parse any date / qualifier out of it themselves.
+    // Typically a document slug joined with its version date, e.g.
+    // "esma70-156-4572-...-pdf/2021-09-29" (the "/" separator is provisional).
     string vendor_document_id = 2;
 
     string rel_path = 3;           // relative path within the corpus
