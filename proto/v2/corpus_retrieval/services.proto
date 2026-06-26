@@ -1,0 +1,174 @@
+syntax = "proto3";
+
+// External corpus-retrieval chatbot.
+//
+// A retrieval-augmented chat service: the client sends a conversation and the
+// server streams the run (plan updates, tool activity, answer deltas), a
+// terminal result with sources, and claim/source attribution as a trailing
+// event on the same stream. The run is fully server-configured.
+//
+// Claim/source attribution rides the same ChatV1 stream as a trailing event
+// (emitted after `result`) so the answer is delivered as soon as it is ready,
+// ahead of the per-claim NLI verdicts.
+package ai.sigmafinancial.aima.v2.corpus_retrieval.services;
+
+service SigmaCorpusRetrievalChatbot {
+    // Start a retrieval-augmented chat run. The server streams ChatEventV1s
+    // (plan updates, tool calls/results, step transitions, answer deltas), then
+    // a terminal `result` (answer + sources), then a TRAILING `attribution`
+    // event (claims + NLI), then closes with OK.
+    rpc ChatV1 (ChatRequestV1) returns (stream ChatEventV1);
+}
+
+// A self-contained, stateless request: the whole conversation so far.
+message ChatRequestV1 {
+    repeated Message messages = 1;
+}
+
+// One conversation turn.
+message Message {
+    string role = 1;     // "user" | "assistant"
+    string content = 2;
+}
+
+// One streamed run event; exactly one payload is set. Every event kind is
+// typed: tool calls, tool results, plan updates and step transitions each have
+// a first-class variant.
+message ChatEventV1 {
+    oneof payload {
+        TextDelta           delta       = 1;  // incremental answer chunk
+        FinalResultV1       result      = 2;  // terminal answer + sources (synchronous)
+        AttributionResultV1 attribution = 3;  // TRAILING: claims + NLI, emitted AFTER result
+        ErrorResultV1       error       = 4;  // terminal failure
+        PlanUpdate          plan_update = 5;  // live plan (list of items + status)
+        ToolCall            tool_call   = 6;  // a tool invocation the agent made
+        ToolResult          tool_result = 7;  // a tool's result fed back
+        StepEvent           step_event  = 8;  // a harness step / stage transition
+    }
+}
+
+message TextDelta {
+    string content = 1;
+}
+
+// The live plan the agent maintains and revises (the update_plan tool / ODA
+// plan). Rendered as a Junie-style task list: an ordered list of items, each
+// carrying its own status.
+message PlanUpdate {
+    string rationale = 1;
+    repeated PlanItem items = 2;
+}
+
+message PlanItem {
+    uint32 id = 1;
+    string text = 2;
+    PlanItemStatus status = 3;
+}
+
+enum PlanItemStatus {
+    PLAN_ITEM_STATUS_UNSPECIFIED = 0;
+    PLAN_ITEM_STATUS_PENDING = 1;   // not yet reached (the default at plan emit)
+    PLAN_ITEM_STATUS_RUNNING = 2;   // currently executing
+    PLAN_ITEM_STATUS_DONE = 3;      // completed successfully
+    PLAN_ITEM_STATUS_FAILED = 4;    // attempted but failed
+    PLAN_ITEM_STATUS_SKIPPED = 5;   // replaced by a plan revision
+}
+
+// A tool invocation the agent made during retrieval, and (separately) its
+// result. args / result are JSON strings — the harness telemetry carries raw
+// JSON, so the wire stays schema-stable as tools evolve.
+message ToolCall {
+    string name = 1;        // e.g. "browse", "grep", "read_candidates", "register_finding"
+    string args_json = 2;
+}
+
+message ToolResult {
+    string name = 1;
+    string result_json = 2;
+}
+
+// A harness-driven step / stage transition in the retrieval timeline.
+message StepEvent {
+    uint32 step_id = 1;
+    string op = 2;                 // "retrieve" | "read" | "assess" | "respond"
+    PlanItemStatus status = 3;     // started -> RUNNING; finished -> DONE / FAILED / SKIPPED
+    string summary = 4;            // short human summary of what the step produced
+}
+
+// Terminal success: the answer text plus the ordered list of sources it cites.
+// Per-claim attribution arrives separately on the trailing AttributionResultV1
+// event, so the answer is delivered as soon as it is ready.
+message FinalResultV1 {
+    string content = 1;
+    repeated Source sources = 2;   // ordered by order of claims (first claim that cites a source fixes its position)
+}
+
+// One cited source document.
+message Source {
+    int32  source_id = 1;          // stable integer key, 1-based; referenced by Claim.source_ids
+
+    // The source vendor's native, version-qualified document identifier. Opaque,
+    // so it stays agnostic to the vendor — it already pins the exact version
+    // retrieved; consumers parse any date / qualifier out of it themselves.
+    // Typically a document slug joined with its version date, e.g.
+    // "esma70-156-4572-...-pdf/2021-09-29" (the "/" separator is provisional).
+    string vendor_document_id = 2;
+
+    string rel_path = 3;           // relative path within the corpus
+    string quote = 4;              // verbatim excerpt supporting the claim(s)
+
+    // Gateway-verified that `quote` occurs in the cited source version. The
+    // gateway resolves the corpus file from rel_path internally; consumers
+    // deep-link through the corpus API using rel_path.
+    bool   quote_verified = 5;
+}
+
+// The trailing attribution event. Carries the per-claim NLI verdicts computed
+// out of band after the answer is known.
+message AttributionResultV1 {
+    string backend_id = 1;
+    string answer = 2;             // DISPLAY answer (backend-A [n] markers stripped); spans index into THIS
+    bool   scored = 3;             // false => every claim.attribution.label = UNSPECIFIED
+    repeated Claim claims = 4;
+}
+
+// One atomic claim extracted from the answer.
+message Claim {
+    string text = 1;
+    optional ClaimSpan span = 2;        // ABSENT when the claim text could not be located; consumers text-match
+    repeated int32 source_ids = 3;      // -> Source.source_id (the sources this claim cites)
+    optional int32 support_source_id = 4; // the source that drove the verdict, when applicable
+    AttributionResult attribution = 5;
+}
+
+// UTF-16 code-unit offsets of a claim's text within AttributionResultV1.answer
+// (UTF-16 because the JS frontend indexes strings in code units).
+message ClaimSpan {
+    int32 start_utf16 = 1;
+    int32 end_utf16 = 2;
+}
+
+// The NLI (or LLM) attribution verdict for one claim.
+message AttributionResult {
+    AttributionLabel label = 1;
+    float confidence = 2;          // 0..1; 0 when unscored
+}
+
+enum AttributionLabel {
+    ATTRIBUTION_LABEL_UNSPECIFIED = 0;        // unscored (NLI unavailable)
+    ATTRIBUTION_LABEL_SUPPORTED_BY_CITED = 1; // a cited source entails the claim (audit-grade)
+    ATTRIBUTION_LABEL_SUPPORTED_BY_OTHER = 2; // read-but-uncited evidence entails it (NLI only)
+    ATTRIBUTION_LABEL_UNSUPPORTED = 3;        // no evidence entails the claim (fabrication risk)
+    ATTRIBUTION_LABEL_CONTRADICTED = 4;       // evidence actively contradicts the claim (NLI only)
+}
+
+message ErrorResultV1 {
+    ErrorCode code = 1;
+    string message = 2;
+}
+
+enum ErrorCode {
+    ERROR_CODE_UNSPECIFIED = 0;
+    ERROR_CODE_BAD_REQUEST = 1;   // malformed input or no user message
+    ERROR_CODE_RUN_FAILED = 2;    // retrieval / generation error — safe to retry
+}
