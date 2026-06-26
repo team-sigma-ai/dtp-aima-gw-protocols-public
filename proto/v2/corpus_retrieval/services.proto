@@ -2,12 +2,14 @@ syntax = "proto3";
 
 // External corpus-retrieval chatbot.
 //
-// Minimal, stable surface: no request config and no eval RPCs. The backend is
-// server-configured (author `[n]` markers + NLI verdicts); there is deliberately
-// no client-facing knob.
+// A retrieval-augmented chat service: the client sends a conversation and the
+// server streams the run (plan updates, tool activity, answer deltas), a
+// terminal result with sources, and claim/source attribution as a trailing
+// event on the same stream. The run is fully server-configured.
 //
-// Claim/source attribution rides the SAME ChatV1 stream as a TRAILING event
-// (emitted AFTER `result`) so per-claim NLI latency never blocks answer delivery.
+// Claim/source attribution rides the same ChatV1 stream as a trailing event
+// (emitted after `result`) so the answer is delivered as soon as it is ready,
+// ahead of the per-claim NLI verdicts.
 package ai.sigmafinancial.aima.v2.corpus_retrieval.services;
 
 service SigmaCorpusRetrievalChatbot {
@@ -18,8 +20,7 @@ service SigmaCorpusRetrievalChatbot {
     rpc ChatV1 (ChatRequestV1) returns (stream ChatEventV1);
 }
 
-// A self-contained, stateless request: the whole conversation so far. The
-// `messages` body is itself the request identity (no idempotency key).
+// A self-contained, stateless request: the whole conversation so far.
 message ChatRequestV1 {
     repeated Message messages = 1;
 }
@@ -30,9 +31,9 @@ message Message {
     string content = 2;
 }
 
-// One streamed run event; exactly one payload is set. Events are TYPED (there
-// is no generic telemetry envelope on the wire): tool calls, tool results, plan
-// updates and step transitions each have a first-class variant.
+// One streamed run event; exactly one payload is set. Every event kind is
+// typed: tool calls, tool results, plan updates and step transitions each have
+// a first-class variant.
 message ChatEventV1 {
     oneof payload {
         TextDelta           delta       = 1;  // incremental answer chunk
@@ -95,8 +96,8 @@ message StepEvent {
 }
 
 // Terminal success: the answer text plus the ordered list of sources it cites.
-// Per-claim attribution does NOT live here — it arrives on the trailing
-// AttributionResultV1 event so NLI does not block answer delivery.
+// Per-claim attribution arrives separately on the trailing AttributionResultV1
+// event, so the answer is delivered as soon as it is ready.
 message FinalResultV1 {
     string content = 1;
     repeated Source sources = 2;   // ordered by order of claims (first claim that cites a source fixes its position)
@@ -106,8 +107,8 @@ message FinalResultV1 {
 message Source {
     int32  source_id = 1;          // stable integer key, 1-based; referenced by Claim.source_ids
 
-    // The source vendor's native, VERSION-QUALIFIED document identifier. Opaque,
-    // so it stays agnostic to the third party — it already pins the exact version
+    // The source vendor's native, version-qualified document identifier. Opaque,
+    // so it stays agnostic to the vendor — it already pins the exact version
     // retrieved; consumers parse any date / qualifier out of it themselves.
     // Typically a document slug joined with its version date, e.g.
     // "esma70-156-4572-...-pdf/2021-09-29" (the "/" separator is provisional).
@@ -117,8 +118,8 @@ message Source {
     string quote = 4;              // verbatim excerpt supporting the claim(s)
 
     // Gateway-verified that `quote` occurs in the cited source version. The
-    // gateway resolves the corpus file id from rel_path internally to do this, so
-    // no file id is exposed on the wire (consumers deep-link via the corpus API).
+    // gateway resolves the corpus file from rel_path internally; consumers
+    // deep-link through the corpus API using rel_path.
     bool   quote_verified = 5;
 }
 
