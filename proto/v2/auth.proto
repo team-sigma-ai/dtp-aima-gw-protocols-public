@@ -1,0 +1,38 @@
+syntax = "proto3";
+
+package ai.sigmafinancial.aima.v2.auth;
+
+// Version 2 of the token shape. Carries a direct reference to the policy whose
+// statements the token's scope resolves to, replacing the deprecated
+// `repeated int32 scope` carried by v1 `auth.TokenData`.
+//
+// A new message (issued via `IssueTokenV2`) rather than a field added to v1:
+// tokens are signed over their serialised `TokenData` and replayed by the client
+// through a JSON-into-struct round-trip, which silently drops fields the client's
+// schema does not know about. An older client handed a v1 token carrying an extra
+// field would drop it on replay and fail the signature check. Versioning keeps
+// old clients on v1 (never receiving the field) and new clients on v2.
+// See docs/rbac_policy_design.md §6.
+message TokenV2 {
+    // Token payload
+    TokenDataV2 data = 5;
+    // Token signature
+    string signature = 10;
+}
+
+message TokenDataV2 {
+    // The token ID
+    string id = 1;
+    // The ID of the system that signed the token
+    string token_signature_id = 5;
+    // The App Key used to create the token
+    string derived_from = 10;
+    // When the token was issued
+    int64 created = 15;
+    // When the token expires
+    int64 expires = 20;
+    // The policy the token's scope resolves to. Repeated and forward-compatible,
+    // but exactly one entry under the many-to-one AppKey->policy binding.
+    // Replaces the deprecated `repeated int32 scope` of v1 `auth.TokenData`.
+    repeated string policy_id = 25;
+}

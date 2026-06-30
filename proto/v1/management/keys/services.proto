@@ -3,6 +3,7 @@ syntax = "proto3";
 package ai.sigmafinancial.aima.v1.management.key.services;
 
 import "dtp-aima-gw-protocols-public/proto/v1/auth.proto";
+import "dtp-aima-gw-protocols-public/proto/v2/auth.proto";
 import "dtp-aima-gw-protocols-shared/proto/v1/common.proto";
 
 service KeyManagement {
@@ -10,6 +11,9 @@ service KeyManagement {
     rpc Create (CreateKeyRequest) returns (CreateKeyResponse);
     rpc Delete (DeleteKeysRequest) returns (common.Empty);
     rpc IssueToken (IssueTokenRequest) returns (IssueTokenResponse);
+    // Issue a v2 token, carrying a policy reference rather than the deprecated
+    // int32 scope list. Reuses IssueTokenRequest.
+    rpc IssueTokenV2 (IssueTokenRequest) returns (IssueTokenV2Response);
     // Verify that a token contains a valid signature. Token should be extracted
     // from auth header in request.
     rpc VerifyToken (common.Empty) returns (VerifyTokenResponse);
@@ -81,6 +85,13 @@ message IssueTokenRequest {
 message IssueTokenResponse {
     // The token that was created
     auth.Token token = 1;
+}
+
+// Response for IssueTokenV2. The request's `scope` field is ignored for v2 since
+// authority derives from the policy bound to the AppKey, not an int32 scope list.
+message IssueTokenV2Response {
+    // The token that was created
+    .ai.sigmafinancial.aima.v2.auth.TokenV2 token = 1;
 }
 
 message VerifyTokenResponse {

@@ -1,0 +1,32 @@
+syntax = "proto3";
+
+package ai.sigmafinancial.aima.v1.capability.services;
+
+import "dtp-aima-gw-protocols-shared/proto/v1/common.proto";
+
+// Read-only discovery of the verb registry: the set of valid `service:verb`
+// pairs an SRN may name. Exposed on the public gateway surface so customers can
+// enumerate the capabilities they may delegate when authoring narrower policies
+// for their own child keys and accounts. The same registry backs SRN validation
+// at policy-authorship time on the internal surface, so the two share one source
+// of truth behind two front doors. See docs/rbac_policy_design.md §5, §8.
+service Capabilities {
+    // List the valid service:verb capabilities. Read-only.
+    rpc ListCapabilities (common.Empty) returns (ListCapabilitiesResponse);
+}
+
+// A single entry in the verb registry: one valid service:verb pair.
+message Capability {
+    // The service the verb belongs to, e.g. "generative", "management".
+    string service = 1;
+    // The action, e.g. "invoke_workflow", "create_account".
+    string verb = 5;
+    // Human-readable description of what the capability grants.
+    string description = 10;
+}
+
+message ListCapabilitiesResponse {
+    // The capabilities in the registry. May be filtered to those the caller can
+    // actually delegate (per the containment rules of §4).
+    repeated Capability capabilities = 1;
+}
