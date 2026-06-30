@@ -24,10 +24,10 @@ before integrating against the contract or opening a PR.
 - **Versioning is by package.** The version lives in the package path
   (`...v1.<area>`, `...v2.<area>`), not in message or service names. Types stay
   plain (`ChatRequest`, `Token`).
-- **A published version is frozen.** It stays forwards-compatible: within a `vN`
-  package only additive, backward-compatible changes are made (new fields with
-  new numbers), so code generated against a version keeps working. A consumer
-  can always upgrade to a newer release of the same version without changes.
+- **A published version is frozen.** Within a `vN` package only additive,
+  backwards-compatible changes are made (new fields with new numbers), so code
+  generated against a version keeps working; a consumer can always upgrade to a
+  newer release of the same version without changes.
 - **A change of shape or semantics arrives as a new `vN` package** with its own
   services and messages. Adopting it is an explicit opt-in; your existing
   integration is untouched. A service may keep the same name across versions
@@ -50,9 +50,13 @@ Changes here alter the published external contract; treat them accordingly.
 - **Authorisation first.** A change to these protos changes what external
   consumers depend on. Get sign-off before starting, and never merge without
   approval.
-- **Forwards compatibility is the priority.** Avoid breaking changes. Code
-  generated against a published version must keep compiling and working against
-  every later release of that version.
+- **Backwards compatibility.** A newer release of a version must keep working
+  for code generated against an earlier release of it. Additive-only changes
+  (new fields with new numbers, never removed, renumbered, or retyped) deliver
+  this.
+- **Forwards compatibility.** Design for it up front: keep messages open and
+  extensible so later additions don't break existing consumers. Avoid breaking
+  changes through good design, not by patching around them afterwards.
 - **If in doubt, follow the existing patterns in the codebase.** Match the
   surrounding files for style, naming, field numbering, and layout rather than
   inventing a new convention.
