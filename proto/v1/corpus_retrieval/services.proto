@@ -7,21 +7,21 @@ syntax = "proto3";
 // terminal result with sources, and claim/source attribution as a trailing
 // event on the same stream. The run is fully server-configured.
 //
-// Claim/source attribution rides the same ChatV1 stream as a trailing event
+// Claim/source attribution rides the same Chat stream as a trailing event
 // (emitted after `result`) so the answer is delivered as soon as it is ready,
 // ahead of the per-claim NLI verdicts.
-package ai.sigmafinancial.aima.v2.corpus_retrieval.services;
+package ai.sigmafinancial.aima.v1.corpus_retrieval.services;
 
-service SigmaCorpusRetrievalChatbot {
-    // Start a retrieval-augmented chat run. The server streams ChatEventV1s
+service CorpusRetrieval {
+    // Start a retrieval-augmented chat run. The server streams ChatEvents
     // (plan updates, tool calls/results, step transitions, answer deltas), then
     // a terminal `result` (answer + sources), then a TRAILING `attribution`
     // event (claims + NLI), then closes with OK.
-    rpc ChatV1 (ChatRequestV1) returns (stream ChatEventV1);
+    rpc Chat (ChatRequest) returns (stream ChatEvent);
 }
 
 // A self-contained, stateless request: the whole conversation so far.
-message ChatRequestV1 {
+message ChatRequest {
     repeated Message messages = 1;
 }
 
@@ -34,16 +34,16 @@ message Message {
 // One streamed run event; exactly one payload is set. Every event kind is
 // typed: tool calls, tool results, plan updates and step transitions each have
 // a first-class variant.
-message ChatEventV1 {
+message ChatEvent {
     oneof payload {
-        TextDelta           delta       = 1;  // incremental answer chunk
-        FinalResultV1       result      = 2;  // terminal answer + sources (synchronous)
-        AttributionResultV1 attribution = 3;  // TRAILING: claims + NLI, emitted AFTER result
-        ErrorResultV1       error       = 4;  // terminal failure
-        PlanUpdate          plan_update = 5;  // live plan (list of items + status)
-        ToolCall            tool_call   = 6;  // a tool invocation the agent made
-        ToolResult          tool_result = 7;  // a tool's result fed back
-        StepEvent           step_event  = 8;  // a harness step / stage transition
+        TextDelta   delta       = 1;  // incremental answer chunk
+        FinalResult result      = 2;  // terminal answer + sources (synchronous)
+        Attribution attribution = 3;  // TRAILING: claims + NLI, emitted AFTER result
+        ErrorResult error       = 4;  // terminal failure
+        PlanUpdate  plan_update = 5;  // live plan (list of items + status)
+        ToolCall    tool_call   = 6;  // a tool invocation the agent made
+        ToolResult  tool_result = 7;  // a tool's result fed back
+        StepEvent   step_event  = 8;  // a harness step / stage transition
     }
 }
 
@@ -96,9 +96,9 @@ message StepEvent {
 }
 
 // Terminal success: the answer text plus the ordered list of sources it cites.
-// Per-claim attribution arrives separately on the trailing AttributionResultV1
+// Per-claim attribution arrives separately on the trailing Attribution
 // event, so the answer is delivered as soon as it is ready.
-message FinalResultV1 {
+message FinalResult {
     string content = 1;
     repeated Source sources = 2;   // ordered by order of claims (first claim that cites a source fixes its position)
 }
@@ -125,7 +125,7 @@ message Source {
 
 // The trailing attribution event. Carries the per-claim NLI verdicts computed
 // out of band after the answer is known.
-message AttributionResultV1 {
+message Attribution {
     string backend_id = 1;
     string answer = 2;             // DISPLAY answer (backend-A [n] markers stripped); spans index into THIS
     bool   scored = 3;             // false => every claim.attribution.label = UNSPECIFIED
@@ -141,7 +141,7 @@ message Claim {
     AttributionResult attribution = 5;
 }
 
-// UTF-16 code-unit offsets of a claim's text within AttributionResultV1.answer
+// UTF-16 code-unit offsets of a claim's text within Attribution.answer
 // (UTF-16 because the JS frontend indexes strings in code units).
 message ClaimSpan {
     int32 start_utf16 = 1;
@@ -162,7 +162,7 @@ enum AttributionLabel {
     ATTRIBUTION_LABEL_CONTRADICTED = 4;       // evidence actively contradicts the claim (NLI only)
 }
 
-message ErrorResultV1 {
+message ErrorResult {
     ErrorCode code = 1;
     string message = 2;
 }
