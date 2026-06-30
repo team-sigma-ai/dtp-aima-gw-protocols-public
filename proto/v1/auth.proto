@@ -23,10 +23,8 @@ message TokenData {
     int64 expires = 20;
     // The scopes the token is valid for.
     //
-    // Deprecated: superseded by the policy reference carried in v2
-    // `auth.TokenDataV2` (`repeated string policy_id`). Retained on the wire for
-    // v1 compatibility; has no live readers. See docs/rbac_policy_design.md §6.
-    repeated int32 scope = 25 [deprecated = true];
+    // Deprecated: superseded by the policy reference on v2 `auth.TokenData`.
+    repeated int32 scope = 25;
 }
 
 message AppKey {
@@ -40,10 +38,11 @@ message AppKey {
     string public = 10;
     // When the keypair was issued
     int64 created = 15;
+    // True for the account's root key; it cannot be rebound or deleted
+    bool root = 20;
     // The scopes the keypair can issue tokens for.
     //
-    // Deprecated: an AppKey's authority now derives from the policy bound to it
-    // (`appkeys.policy_id`), not from an int32 scope list. Retained for v1
-    // compatibility. See docs/rbac_policy_design.md §6.
-    repeated int32 scope = 30 [deprecated = true];
+    // Deprecated: an AppKey's authority now derives from the policy bound to it,
+    // surfaced via v2 token issuance.
+    repeated int32 scope = 30;
 }
