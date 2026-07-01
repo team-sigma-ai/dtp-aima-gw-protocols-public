@@ -44,10 +44,17 @@ message ChatEvent {
         ToolCall    tool_call   = 6;  // a tool invocation the agent made
         ToolResult  tool_result = 7;  // a tool's result fed back
         StepEvent   step_event  = 8;  // a harness step / stage transition
+        ReasoningDelta reasoning = 9;  // live agent reasoning / thinking text
     }
 }
 
 message TextDelta {
+    string content = 1;
+}
+
+// Incremental agent reasoning / "thinking" text, streamed live as the agent
+// works. Distinct from `delta`, which is the answer text.
+message ReasoningDelta {
     string content = 1;
 }
 
