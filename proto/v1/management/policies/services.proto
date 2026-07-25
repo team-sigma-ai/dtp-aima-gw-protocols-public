@@ -18,6 +18,20 @@ service PolicyManagement {
     rpc BindAppKey (BindAppKeyRequest) returns (.ai.sigmafinancial.aima.common.Empty);
     // Replace an account's boundary policy (ABP) with a new statement list
     rpc UpdateAccountBoundaryPolicy (UpdateAccountBoundaryPolicyRequest) returns (UpdateAccountBoundaryPolicyResponse);
+    // Read an account's boundary policy (ABP) and its effective ceiling
+    rpc GetAccountBoundaryPolicy (GetAccountBoundaryPolicyRequest) returns (GetAccountBoundaryPolicyResponse);
+}
+
+message GetAccountBoundaryPolicyRequest {
+    // The account whose boundary policy is being read
+    string account_id = 1;
+}
+
+message GetAccountBoundaryPolicyResponse {
+    // The account's authored ABP statements (empty if the account is unbounded)
+    repeated string statements = 1;
+    // The account's materialised effective ceiling
+    repeated string effective = 5;
 }
 
 // Policy and Statement are defined in shared/proto/v1/management/policies/messages.proto (same package).
