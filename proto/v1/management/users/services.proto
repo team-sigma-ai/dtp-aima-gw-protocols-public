@@ -57,8 +57,8 @@ message ListAccountsResponse {
 
 message CreateAccountRequest {
     ai.sigmafinancial.aima.v1.user.NewAccount create = 1;
-    // The products to grant the new account
-    repeated string grant_products = 5;
+    // The SRN statements that become the account's boundary policy (ABP)
+    repeated string initial_statements = 5;
 }
 
 // CreateAccountResponse is defined in shared/proto/v1/management/users/messages.proto (same package).
