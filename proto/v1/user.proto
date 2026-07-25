@@ -2,19 +2,7 @@ syntax = "proto3";
 
 package ai.sigmafinancial.aima.v1.user;
 
-message NewAccount {
-    string name = 5;
-    string parent_id = 15;
-}
-
-message Account {
-    string id = 1;
-    string name = 5;
-    bool active = 10;
-    // Could be a subaccount of another
-    string parent_id = 15;
-    int64 created = 25;
-}
+// NewAccount and Account are defined in shared/proto/v1/account.proto (same package).
 
 message User {
     // The user ID

@@ -1,13 +1,14 @@
 syntax = "proto3";
 
-package ai.sigmafinancial.aima.v1.auth;
-
+package ai.sigmafinancial.aima.v2.auth;
 
 message Token {
     // Token payload
     TokenData data = 5;
     // Token signature
     string signature = 10;
+    // Base64-encoded `data` for the Authorization: Bearer header
+    string encoded_data = 15;
 }
 
 message TokenData {
@@ -21,10 +22,6 @@ message TokenData {
     int64 created = 15;
     // When the token expires
     int64 expires = 20;
-    // The scopes the token is valid for.
-    //
-    // Deprecated: superseded by the policy reference on v2 `auth.TokenData`.
-    repeated int32 scope = 25;
+    // The policies the token's scope resolves to
+    repeated string policy_id = 25;
 }
-
-// AppKey is defined in shared/proto/v1/auth.proto (same package).

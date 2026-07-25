@@ -3,6 +3,8 @@ syntax = "proto3";
 package ai.sigmafinancial.aima.v1.management.user.services;
 
 import "dtp-aima-gw-protocols-public/proto/v1/user.proto";
+import "dtp-aima-gw-protocols-shared/proto/v1/account.proto";
+import "dtp-aima-gw-protocols-shared/proto/v1/management/users/messages.proto";
 import "dtp-aima-gw-protocols-shared/proto/v1/common.proto";
 
 service UserManagement {
@@ -55,12 +57,11 @@ message ListAccountsResponse {
 
 message CreateAccountRequest {
     ai.sigmafinancial.aima.v1.user.NewAccount create = 1;
+    // The products to grant the new account
+    repeated string grant_products = 5;
 }
 
-message CreateAccountResponse {
-    ai.sigmafinancial.aima.v1.user.Account created = 1;
-}
-
+// CreateAccountResponse is defined in shared/proto/v1/management/users/messages.proto (same package).
 
 // Lists the keys that match the given filters, if any
 message ListUsersRequest {
