@@ -2,11 +2,11 @@ syntax = "proto3";
 
 package ai.sigmafinancial.aima.v1.capability.services;
 
-import "dtp-aima-gw-protocols-shared/proto/v1/common.proto";
+import "dtp-aima-gw-protocols-shared/proto/common/basic.proto";
 
 service Capabilities {
     // List the available service:verb capabilities
-    rpc ListCapabilities (common.Empty) returns (ListCapabilitiesResponse);
+    rpc ListCapabilities (.ai.sigmafinancial.aima.common.Empty) returns (ListCapabilitiesResponse);
 }
 
 // A single service:verb capability

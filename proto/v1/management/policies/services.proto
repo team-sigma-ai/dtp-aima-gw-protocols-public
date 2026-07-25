@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package ai.sigmafinancial.aima.v1.management.policy.services;
 
-import "dtp-aima-gw-protocols-shared/proto/v1/common.proto";
+import "dtp-aima-gw-protocols-shared/proto/common/basic.proto";
 import "dtp-aima-gw-protocols-shared/proto/v1/management/policies/messages.proto";
 
 service PolicyManagement {
@@ -13,9 +13,9 @@ service PolicyManagement {
     // List policies, optionally filtered by owning account
     rpc ListPolicies (ListPoliciesRequest) returns (ListPoliciesResponse);
     // Delete a policy; fails if an App Key is still bound to it
-    rpc DeletePolicy (DeletePolicyRequest) returns (common.Empty);
+    rpc DeletePolicy (DeletePolicyRequest) returns (.ai.sigmafinancial.aima.common.Empty);
     // Bind an App Key to a policy
-    rpc BindAppKey (BindAppKeyRequest) returns (common.Empty);
+    rpc BindAppKey (BindAppKeyRequest) returns (.ai.sigmafinancial.aima.common.Empty);
     // Grant products to an existing account's policy
     rpc GrantProduct (GrantProductRequest) returns (GrantProductResponse);
 }
