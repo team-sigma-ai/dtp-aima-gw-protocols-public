@@ -16,8 +16,8 @@ service PolicyManagement {
     rpc DeletePolicy (DeletePolicyRequest) returns (.ai.sigmafinancial.aima.common.Empty);
     // Bind an App Key to a policy
     rpc BindAppKey (BindAppKeyRequest) returns (.ai.sigmafinancial.aima.common.Empty);
-    // Grant products to an existing account's policy
-    rpc GrantProduct (GrantProductRequest) returns (GrantProductResponse);
+    // Replace an account's boundary policy (ABP) with a new statement list
+    rpc UpdateAccountBoundaryPolicy (UpdateAccountBoundaryPolicyRequest) returns (UpdateAccountBoundaryPolicyResponse);
 }
 
 // Policy and Statement are defined in shared/proto/v1/management/policies/messages.proto (same package).
@@ -66,11 +66,11 @@ message BindAppKeyRequest {
     string policy_id = 5;
 }
 
-message GrantProductRequest {
-    // The account to grant the products to
+message UpdateAccountBoundaryPolicyRequest {
+    // The account whose boundary policy is being replaced
     string account_id = 1;
-    // The products to grant; each adds srn:<account>:<service>:*:*
-    repeated string products = 5;
+    // The full SRN statement list that becomes the account's ABP
+    repeated string statements = 5;
 }
 
-// GrantProductResponse is defined in shared/proto/v1/management/policies/messages.proto (same package).
+// UpdateAccountBoundaryPolicyResponse is defined in shared/proto/v1/management/policies/messages.proto (same package).
