@@ -1,0 +1,76 @@
+syntax = "proto3";
+
+package ai.sigmafinancial.aima.v1.management.policy.services;
+
+import "dtp-aima-gw-protocols-shared/proto/v1/common.proto";
+import "dtp-aima-gw-protocols-shared/proto/v1/management/policies/messages.proto";
+
+service PolicyManagement {
+    // Create a policy from a set of SRN statements
+    rpc CreatePolicy (CreatePolicyRequest) returns (CreatePolicyResponse);
+    // Fetch a policy by id
+    rpc GetPolicy (GetPolicyRequest) returns (GetPolicyResponse);
+    // List policies, optionally filtered by owning account
+    rpc ListPolicies (ListPoliciesRequest) returns (ListPoliciesResponse);
+    // Delete a policy; fails if an App Key is still bound to it
+    rpc DeletePolicy (DeletePolicyRequest) returns (common.Empty);
+    // Bind an App Key to a policy
+    rpc BindAppKey (BindAppKeyRequest) returns (common.Empty);
+    // Grant products to an existing account's policy
+    rpc GrantProduct (GrantProductRequest) returns (GrantProductResponse);
+}
+
+// Policy and Statement are defined in shared/proto/v1/management/policies/messages.proto (same package).
+
+message CreatePolicyRequest {
+    // The account that will own the policy
+    string owner_id = 1;
+    // The SRN statements to grant
+    repeated string srn = 5;
+}
+
+message CreatePolicyResponse {
+    // The created policy
+    Policy policy = 1;
+}
+
+message GetPolicyRequest {
+    // The policy to fetch
+    string policy_id = 1;
+}
+
+message GetPolicyResponse {
+    // The requested policy
+    Policy policy = 1;
+}
+
+message ListPoliciesRequest {
+    // Filter to policies owned by this account; empty for all visible
+    string owner_id = 1;
+}
+
+message ListPoliciesResponse {
+    // The matching policies
+    repeated Policy policies = 1;
+}
+
+message DeletePolicyRequest {
+    // The policy to delete
+    string policy_id = 1;
+}
+
+message BindAppKeyRequest {
+    // The App Key to bind
+    string app_key_id = 1;
+    // The policy to bind it to
+    string policy_id = 5;
+}
+
+message GrantProductRequest {
+    // The account to grant the products to
+    string account_id = 1;
+    // The products to grant; each adds srn:<account>:<service>:*:*
+    repeated string products = 5;
+}
+
+// GrantProductResponse is defined in shared/proto/v1/management/policies/messages.proto (same package).

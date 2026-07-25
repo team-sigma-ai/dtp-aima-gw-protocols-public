@@ -3,6 +3,8 @@ syntax = "proto3";
 package ai.sigmafinancial.aima.v1.management.key.services;
 
 import "dtp-aima-gw-protocols-public/proto/v1/auth.proto";
+import "dtp-aima-gw-protocols-shared/proto/v1/auth.proto";
+import "dtp-aima-gw-protocols-shared/proto/v1/management/keys/messages.proto";
 import "dtp-aima-gw-protocols-shared/proto/v1/common.proto";
 
 service KeyManagement {
@@ -43,10 +45,7 @@ message CreateKeyRequest {
     string account_id = 10;
 }
 
-message CreateKeyResponse {
-    // The key that was created
-    auth.AppKey key = 1;
-}
+// CreateKeyResponse is defined in shared/proto/v1/management/keys/messages.proto (same package).
 
 // Deletes the keys with the given key_ids
 // This will immediately invalidate the keys

@@ -1,0 +1,42 @@
+syntax = "proto3";
+
+package ai.sigmafinancial.aima.v2.management.key.services;
+
+import "dtp-aima-gw-protocols-public/proto/v2/auth.proto";
+import "dtp-aima-gw-protocols-shared/proto/v2/common.proto";
+
+service KeyManagement {
+    // Issue a token for an App Key
+    rpc IssueToken (IssueTokenRequest) returns (IssueTokenResponse);
+    // Verify that a token contains a valid signature. Token should be extracted
+    // from auth header in request.
+    rpc VerifyToken (common.Empty) returns (VerifyTokenResponse);
+}
+
+message IssueTokenRequest {
+    // The API Key ID to create a token from
+    string app_key_id = 1;
+
+    // The current time in epoch seconds, max allowed clock-skew with server is 60 seconds.
+    int64 epoch_time = 3;
+
+    // Number used once, sending the request again with the same nonce will be refused.
+    int64 nonce = 4;
+
+    // Generate a signature string by concatenating "{app_key_id}{epoch_time}{nonce}"
+    // and signing the resulting string with the private key part of the App Key
+    string signature = 5;
+
+    // The duration (in seconds) the token should live for
+    int64 life_span = 15;
+}
+
+message IssueTokenResponse {
+    // The token that was created
+    auth.Token token = 1;
+}
+
+message VerifyTokenResponse {
+    // The token that was verified, serialized as it should appear in an auth header.
+    string token = 1;
+}

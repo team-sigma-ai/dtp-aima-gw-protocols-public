@@ -1,0 +1,25 @@
+syntax = "proto3";
+
+package ai.sigmafinancial.aima.v1.capability.services;
+
+import "dtp-aima-gw-protocols-shared/proto/v1/common.proto";
+
+service Capabilities {
+    // List the available service:verb capabilities
+    rpc ListCapabilities (common.Empty) returns (ListCapabilitiesResponse);
+}
+
+// A single service:verb capability
+message Capability {
+    // The service the verb belongs to
+    string service = 1;
+    // The action the verb performs
+    string verb = 5;
+    // What the capability grants
+    string description = 10;
+}
+
+message ListCapabilitiesResponse {
+    // The available capabilities
+    repeated Capability capabilities = 1;
+}
