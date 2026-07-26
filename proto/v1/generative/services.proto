@@ -10,8 +10,15 @@ service Generative {
     rpc ScheduleReportRaw (ScheduleReportGenerationRequest) returns (common.Empty);
     rpc ScheduleWorkflowRun (ScheduleReportGenerationRequest) returns (common.Empty);
     // Get workflow metadata.
-    rpc ViewWorkflow (ViewWorkflowRequest) returns (ViewWorkflowResponse);
-    rpc InvokeWorkflow (WorkflowRequest) returns (common.ReportResponse);
+    //
+    // Deprecated: use v3 Generative.ViewWorkflow.
+    rpc ViewWorkflow (ViewWorkflowRequest) returns (ViewWorkflowResponse) {
+        option deprecated = true;
+    }
+    // Deprecated: use v3 Generative.InvokeWorkflow.
+    rpc InvokeWorkflow (WorkflowRequest) returns (common.ReportResponse) {
+        option deprecated = true;
+    }
     // Dispatch a workflow run asynchronously and return a Job ID immediately.
     // Takes the v3 InvokeWorkflow request so typed parameters survive, and the
     // run produces a v3 InvokeWorkflowResponse collected via the result RPC.
