@@ -28,10 +28,14 @@ message GetAccountBoundaryPolicyRequest {
 }
 
 message GetAccountBoundaryPolicyResponse {
-    // The account's authored ABP statements (empty if the account is unbounded)
+    // The account's authored ABP allow statements
     repeated string statements = 1;
-    // The account's materialised effective ceiling
+    // The account's materialised effective ceiling allow set
     repeated string effective = 5;
+    // The account's authored ABP deny statements
+    repeated string statement_denies = 10;
+    // The materialised effective ceiling deny set
+    repeated string effective_denies = 15;
 }
 
 // Policy and Statement are defined in shared/proto/v1/management/policies/messages.proto (same package).
@@ -40,7 +44,9 @@ message CreatePolicyRequest {
     // The account that will own the policy
     string owner_id = 1;
     // The SRN statements to grant
-    repeated string srn = 5;
+    repeated string statements = 5;
+    // The SRN statements to deny
+    repeated string statement_denies = 10;
 }
 
 message CreatePolicyResponse {
@@ -83,8 +89,10 @@ message BindAppKeyRequest {
 message UpdateAccountBoundaryPolicyRequest {
     // The account whose boundary policy is being replaced
     string account_id = 1;
-    // The full SRN statement list that becomes the account's ABP
+    // The SRN statements to grant
     repeated string statements = 5;
+    // The SRN statements to deny
+    repeated string statement_denies = 10;
 }
 
 // UpdateAccountBoundaryPolicyResponse is defined in shared/proto/v1/management/policies/messages.proto (same package).
