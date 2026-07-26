@@ -24,7 +24,7 @@ message TokenData {
     // The scopes the token is valid for.
     //
     // Deprecated: superseded by the policy reference on v2 `auth.TokenData`.
-    repeated int32 scope = 25;
+    repeated int32 scope = 25 [deprecated = true];
 }
 
 // AppKey is defined in shared/proto/v1/auth.proto (same package).

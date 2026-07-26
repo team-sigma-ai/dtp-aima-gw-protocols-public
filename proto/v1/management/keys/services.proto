@@ -19,13 +19,15 @@ service KeyManagement {
 
 // Lists the keys that match the given filters, if any
 message ListKeysRequest {
-    // Filters the keys by scope if provided
-    repeated int32 scope = 1;
+    // This field has no effect
+    repeated int32 scope = 1 [deprecated = true];
     // Filters the keys by ID if provided
     repeated string id = 2;
     // Filters the keys by when they were created or expire
     int64 created_after = 5;
     int64 expires_before = 10;
+    // Filter for keys bound to a policy.
+    string policy_id = 20;
 }
 
 message ListKeysResponse {
@@ -36,13 +38,15 @@ message ListKeysResponse {
 // Creates a new key with the given scope and expiration time (if none is provided, the key will never expire)
 // A new key can never have more scope than the one of the key used to create it, only the same or smaller.
 message CreateKeyRequest {
-    // The scope of the key
-    repeated int32 scope = 1;
+    // This field has no effect
+    repeated int32 scope = 1 [deprecated = true];
     // The time the key will expire
     int64 expires = 5;
     // The account this key will belong to, it can only be the account used to create it, or a child account
     // If not provided, it will belong to the account that owns the key used to call this endpoint
     string account_id = 10;
+    // The policy to bind the key to at creation.
+    string policy_id = 20;
 }
 
 // CreateKeyResponse is defined in shared/proto/v1/management/keys/messages.proto (same package).
@@ -69,8 +73,8 @@ message IssueTokenRequest {
     // and signing the resulting string with the private key part of the App Key
     string signature = 5;
 
-    // The scopes the token should have
-    repeated int32 scope = 10;
+    // This field has no effect
+    repeated int32 scope = 10 [deprecated = true];
 
     // The duration (in seconds) the token should live for
     int64 life_span = 15;

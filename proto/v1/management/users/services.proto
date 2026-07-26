@@ -65,8 +65,8 @@ message CreateAccountRequest {
 
 // Lists the keys that match the given filters, if any
 message ListUsersRequest {
-    // Filters the keys by scope if provided
-    repeated int32 scope = 1;
+    // This field has no effect
+    repeated int32 scope = 1 [deprecated = true];
     // Filters the users by when they were created
     int64 created_after = 5;
     // Filter users by name

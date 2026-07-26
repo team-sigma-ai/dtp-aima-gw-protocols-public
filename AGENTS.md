@@ -34,8 +34,8 @@ before integrating against the contract or opening a PR.
   (`v1.…CorpusRetrieval`, `v2.…CorpusRetrieval`); the package keeps them distinct.
 - **Field stability.** Field numbers and types are never changed or reused, and
   fields are never removed or renamed within a published version. A superseded
-  field is marked with a `// Deprecated: …` doc comment but stays on the wire,
-  its number and type unchanged.
+  field is marked `[deprecated = true]` but stays on the wire, its number and
+  type unchanged.
 - **Finding things.** The layout is `proto/vN/<area>/services.proto` (for
   example `proto/v1/generative/services.proto` or
   `proto/v1/management/keys/services.proto`). The package mirrors the path
@@ -76,10 +76,15 @@ Changes here alter the published external contract; treat them accordingly.
   builds the message.
 - **A new shape means a new `vN` package**, never a breaking edit to a frozen
   version.
-- **Deprecation.** Mark a superseded field with a doc comment (`// Deprecated: …`)
-  only. Do not use the proto `[deprecated = true]` option; some code generators
-  emit a deprecation attribute that breaks downstream builds which deny
-  warnings. Keep the field on the wire, its number and type unchanged.
+- **Deprecation.** Mark a superseded field with the proto `[deprecated = true]`
+  option, and a brief `// …` comment (name the replacement where there is one).
+  This deliberately emits a deprecation attribute in generated stubs: that
+  warning is the signal for consumers to migrate, so a build that denies warnings
+  is meant to act on it. Keep the field on the wire, its number and type
+  unchanged; the field is only ever removed by a new `vN`. Server-side code that
+  must keep reading the field until then suppresses the lint at the call site
+  with `#[expect(deprecated, reason = "…")]` — self-clearing, so it errors once
+  the field is gone and prompts the cleanup.
 - **Validate before opening a PR.** The contract must compile clean, with no
   warnings, in the consuming service(s).
 - **Maintain this document.** When a new house-style rule emerges, update
