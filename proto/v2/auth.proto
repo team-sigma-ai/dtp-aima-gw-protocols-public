@@ -3,12 +3,10 @@ syntax = "proto3";
 package ai.sigmafinancial.aima.v2.auth;
 
 message Token {
-    // Token payload
-    TokenData data = 5;
+    // Encoded token data
+    string encoded_token_data = 5;
     // Token signature
     string signature = 10;
-    // Base64-encoded `data` for the Authorization: Bearer header
-    string encoded_data = 15;
 }
 
 message TokenData {
