@@ -34,6 +34,14 @@ message IssueTokenRequest {
 message IssueTokenResponse {
     // The token that was created
     auth.Token token = 1;
+
+    // The token data for introspection.
+    auth.TokenData token_data = 5;
+
+    // A ready-to-use Base64 representation of the token, we recommend you use
+    // this instead of serializing the token yourself. It will significantly reduce
+    // the risk of issues caused by languages, encoding and future changes.
+    string token_string = 10;
 }
 
 message VerifyTokenResponse {
