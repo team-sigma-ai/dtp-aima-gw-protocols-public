@@ -215,5 +215,4 @@ enum ErrorCode {
 message ContextExceeded {
     int32 current_tokens = 1;
     int32 limit_tokens = 2;
-    string guidance = 3;
 }
