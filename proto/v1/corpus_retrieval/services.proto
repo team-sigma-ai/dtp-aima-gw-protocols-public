@@ -209,6 +209,7 @@ enum ErrorCode {
     ERROR_CODE_BAD_REQUEST = 1;   // malformed input or no user message
     ERROR_CODE_RUN_FAILED = 2;    // retrieval / generation error — safe to retry
     ERROR_CODE_CONTEXT_EXCEEDED = 3;  // supplied messages exceed the context budget
+    ERROR_CODE_TOKEN_COUNT_UNAVAILABLE = 4;  // server could not determine whether messages fit the budget; not fixable via CompactHistory
 }
 
 // Detail for ERROR_CODE_CONTEXT_EXCEEDED.
