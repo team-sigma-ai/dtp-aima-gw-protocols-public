@@ -16,8 +16,13 @@ service CorpusRetrieval {
     // Start a retrieval-augmented chat run. The server streams ChatEvents
     // (plan updates, tool calls/results, step transitions, answer deltas), then
     // a terminal `result` (answer + sources), then a TRAILING `attribution`
-    // event (claims + NLI), then closes with OK.
+    // event (claims + NLI), then closes with OK. If `messages` exceeds the
+    // server's context budget, the stream yields a single `error` event with
+    // code ERROR_CODE_CONTEXT_EXCEEDED instead.
     rpc Chat (ChatRequest) returns (stream ChatEvent);
+
+    // Compact a conversation's history into a shorter, directly reusable form.
+    rpc CompactHistory (CompactHistoryRequest) returns (CompactHistoryResult);
 }
 
 // A self-contained, stateless request: the whole conversation so far.
@@ -27,8 +32,30 @@ message ChatRequest {
 
 // One conversation turn.
 message Message {
-    string role = 1;     // "user" | "assistant"
+    string role = 1;     // "user" | "assistant" | "summary"
     string content = 2;
+}
+
+// Request to CompactHistory: the full conversation to compact.
+message CompactHistoryRequest {
+    repeated Message messages = 1;
+
+    // Most-recent messages to preserve verbatim. Unset or 0 -> server default.
+    optional int32 keep_recent_messages = 2;
+}
+
+// Result of CompactHistory: a shorter history, directly usable as the
+// `messages` of a subsequent ChatRequest.
+message CompactHistoryResult {
+    repeated Message messages = 1;
+
+    // Half-open [compacted_from, compacted_to) index range into the request's
+    // `messages` that was folded into a summary turn.
+    int32 compacted_from = 2;
+    int32 compacted_to = 3;
+
+    int32 original_tokens = 4;
+    int32 resulting_tokens = 5;
 }
 
 // One streamed run event; exactly one payload is set. Every event kind is
@@ -172,10 +199,21 @@ enum AttributionLabel {
 message ErrorResult {
     ErrorCode code = 1;
     string message = 2;
+
+    // Set when code == ERROR_CODE_CONTEXT_EXCEEDED.
+    optional ContextExceeded context_exceeded = 3;
 }
 
 enum ErrorCode {
     ERROR_CODE_UNSPECIFIED = 0;
     ERROR_CODE_BAD_REQUEST = 1;   // malformed input or no user message
     ERROR_CODE_RUN_FAILED = 2;    // retrieval / generation error — safe to retry
+    ERROR_CODE_CONTEXT_EXCEEDED = 3;  // supplied messages exceed the context budget
+}
+
+// Detail for ERROR_CODE_CONTEXT_EXCEEDED.
+message ContextExceeded {
+    int32 current_tokens = 1;
+    int32 limit_tokens = 2;
+    string guidance = 3;
 }
