@@ -164,6 +164,7 @@ message Attribution {
     string answer = 2;             // DISPLAY answer (backend-A [n] markers stripped); spans index into THIS
     bool   scored = 3;             // false => every claim.attribution.label = UNSPECIFIED
     repeated Claim claims = 4;
+    repeated VerbatimSpan verbatims = 5;  // quoted source text spliced into `answer`; never scored
 }
 
 // One atomic claim extracted from the answer.
@@ -194,6 +195,24 @@ enum AttributionLabel {
     ATTRIBUTION_LABEL_SUPPORTED_BY_OTHER = 2; // read-but-uncited evidence entails it (NLI only)
     ATTRIBUTION_LABEL_UNSUPPORTED = 3;        // no evidence entails the claim (fabrication risk)
     ATTRIBUTION_LABEL_CONTRADICTED = 4;       // evidence actively contradicts the claim (NLI only)
+}
+
+// A `<verbatim>` reference: source text the answer stage spliced directly
+// into `Attribution.answer`, addressed by unit range rather than authored as
+// a paraphrasing `Claim`. Never scored — a quotation entails itself.
+message VerbatimSpan {
+    int32 verbatim = 1;             // 1-based, matches the `<verbatim v="…"/>` tag number
+    ClaimSpan span = 2;             // UTF-16 offsets of the spliced text within Attribution.answer
+    int32 source_id = 3;            // -> Source.source_id; the same pool Claim.source_ids indexes into
+    VerbatimState state = 4;
+}
+
+// Distinct from every AttributionLabel value: a verbatim is not "unscored
+// because NLI was unavailable", it is "not a claim, so there is nothing to
+// score".
+enum VerbatimState {
+    VERBATIM_STATE_UNSPECIFIED = 0;
+    VERBATIM_STATE_QUOTED_UNSCORED = 1; // quoted source text, unscored by design
 }
 
 message ErrorResult {
