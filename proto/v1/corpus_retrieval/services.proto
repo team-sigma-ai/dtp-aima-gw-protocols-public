@@ -28,6 +28,11 @@ service CorpusRetrieval {
 // A self-contained, stateless request: the whole conversation so far.
 message ChatRequest {
     repeated Message messages = 1;
+
+    // A single opaque free-text context string composed by the client. At most
+    // 4,096 bytes; larger requests yield ERROR_CODE_BAD_REQUEST. Untrusted: the
+    // server fences it inside its own framing before it reaches a prompt.
+    optional string additional_instructions = 2;
 }
 
 // One conversation turn.
@@ -221,6 +226,30 @@ message ErrorResult {
 
     // Set when code == ERROR_CODE_CONTEXT_EXCEEDED.
     optional ContextExceeded context_exceeded = 3;
+
+    // Token usage accrued before the failure, on the surfaces that track it.
+    // Absent on v1 chat errors.
+    optional TokenUsageSummary usage = 4;
+}
+
+// One (origin, model) group of completed model calls: exact token counts plus
+// the service's estimated USD cost for them. Cost fields are absent — never
+// zero — when the model has no price row.
+message TokenUsageRow {
+    string origin = 1;
+    string model_id = 2;                     // as invoked: inference profile or bare model id
+    uint32 call_count = 3;
+    uint64 input_tokens = 4;
+    uint64 output_tokens = 5;
+    uint64 cache_read_input_tokens = 6;
+    uint64 cache_write_input_tokens = 7;
+    optional double estimated_cost_usd = 8;
+    optional string price_effective_from = 9;
+}
+
+// The usage rollup a terminal event carries, folded by (origin, model).
+message TokenUsageSummary {
+    repeated TokenUsageRow rows = 1;
 }
 
 enum ErrorCode {
