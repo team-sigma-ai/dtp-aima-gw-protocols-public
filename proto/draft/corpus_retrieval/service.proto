@@ -1,0 +1,27 @@
+syntax = "proto3";
+
+// Corpus-retrieval API: the durable-turn chat surface.
+//
+// One RPC carries a turn. The server acks, streams the turn's progress as
+// frames, and finishes with exactly one terminal, then closes OK.
+//
+// Idempotency and reconnection: the request carries an idempotency key. A
+// replayed key attaches to the existing turn, running or finished, and the
+// server replays every frame the turn has produced before following it live —
+// so a client that loses its connection recovers by repeating the same call.
+// A replayed key whose payload differs from the original is rejected.
+package ai.sigmafinancial.aima.draft.corpus_retrieval.services;
+
+import "dtp-aima-gw-protocols-shared/proto/draft/corpus_retrieval/messages.proto";
+
+service CorpusRetrieval {
+    // Submit a turn, or re-attach to one already submitted under the same
+    // idempotency key. The turn runs to completion even if this stream
+    // disconnects; a later call with the same key replays it and receives the
+    // same terminal outcome.
+    rpc CreateTurn (CreateTurnRequest) returns (stream TurnEvent);
+
+    // Compact a conversation's history into a shorter, directly reusable form.
+    // The remedy for a `context_exceeded` error: compact, then retry.
+    rpc CompactHistory (CompactHistoryRequest) returns (CompactHistoryResult);
+}

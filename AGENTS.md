@@ -31,7 +31,12 @@ before integrating against the contract or opening a PR.
 - **A change of shape or semantics arrives as a new `vN` package** with its own
   services and messages. Adopting it is an explicit opt-in; your existing
   integration is untouched. A service may keep the same name across versions
-  (`v1.…CorpusRetrieval`, `v2.…CorpusRetrieval`); the package keeps them distinct.
+  (`v1.…Generative`, `v2.…Generative`); the package keeps them distinct.
+- **The `draft` package.** A contract not yet frozen (`...draft.<area>`) lives
+  alongside the `vN` packages. It carries no stability guarantee: shape,
+  semantics, and comments may all change without notice, and it may be
+  promoted to `v1` or dropped outright. Do not build a production integration
+  against it.
 - **Field stability.** Field numbers and types are never changed or reused, and
   fields are never removed or renamed within a published version. A superseded
   field is marked `[deprecated = true]` but stays on the wire, its number and
