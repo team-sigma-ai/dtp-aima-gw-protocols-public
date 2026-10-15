@@ -4,6 +4,7 @@ package ai.sigmafinancial.aima.v1.capability.services;
 
 import "dtp-aima-gw-protocols-shared/proto/common/basic.proto";
 
+// Capability discovery
 service Capabilities {
     // List the available service:verb capabilities
     rpc ListCapabilities (.ai.sigmafinancial.aima.common.Empty) returns (ListCapabilitiesResponse);
@@ -19,6 +20,7 @@ message Capability {
     string description = 10;
 }
 
+// The available capabilities
 message ListCapabilitiesResponse {
     // The available capabilities
     repeated Capability capabilities = 1;

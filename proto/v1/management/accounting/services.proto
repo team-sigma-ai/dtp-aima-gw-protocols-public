@@ -4,10 +4,13 @@ package ai.sigmafinancial.aima.v1.management.accounting.services;
 
 import "dtp-aima-gw-protocols-shared/proto/v1/common.proto";
 
+// Account credit balance
 service Accounting {
+  // Get the credits available to the account
   rpc GetAvailableCredits (common.Empty) returns (GetAvailableCreditsResponse);
 }
 
+// The credits available to the account
 message GetAvailableCreditsResponse {
   // The number of credits available
   int32 credits = 1;

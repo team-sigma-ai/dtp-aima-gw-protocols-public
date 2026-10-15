@@ -5,105 +5,112 @@ package ai.sigmafinancial.aima.v1.generative.services;
 import "dtp-aima-gw-protocols-shared/proto/v1/common.proto";
 import "dtp-aima-gw-protocols-shared/proto/v3/generative/messages.proto";
 
+// Report generation, workflow runs and chat
 service Generative {
+    // Estimate the credit cost of a report
     rpc GetReportCreditEstimate (GetReportCreditEstimateRequest) returns (GetReportCreditEstimateResponse);
+    // Schedule the generation of a report from a raw configuration
     rpc ScheduleReportRaw (ScheduleReportGenerationRequest) returns (common.Empty);
+    // Schedule a workflow run
     rpc ScheduleWorkflowRun (ScheduleReportGenerationRequest) returns (common.Empty);
-    // Get workflow metadata.
-    //
-    // Deprecated: use v3 Generative.ViewWorkflow.
+    // Get workflow metadata; deprecated, use v3 Generative.ViewWorkflow
     rpc ViewWorkflow (ViewWorkflowRequest) returns (ViewWorkflowResponse) {
         option deprecated = true;
     }
-    // Deprecated: use v3 Generative.InvokeWorkflow.
+    // Run a workflow; deprecated, use v3 Generative.InvokeWorkflow
     rpc InvokeWorkflow (WorkflowRequest) returns (common.ReportResponse) {
         option deprecated = true;
     }
-    // Dispatch a workflow run asynchronously and return a Job ID immediately.
-    // Takes the v3 InvokeWorkflow request so typed parameters survive, and the
-    // run produces a v3 InvokeWorkflowResponse collected via the result RPC.
+    // Dispatch a workflow run asynchronously and return its job id
     rpc InvokeWorkflowAsync (ai.sigmafinancial.aima.v3.generative.services.InvokeWorkflowRequest) returns (InvokeWorkflowAsyncResponse);
-    // Collect the result of a previously dispatched async run by Job ID.
+    // Collect the result of an async run by job id
     rpc InvokeWorkflowAsyncResult (InvokeWorkflowAsyncResultRequest) returns (InvokeWorkflowAsyncResultResponse);
+    // Run a workflow, streaming its output
     rpc InvokeWorkflowStreaming (WorkflowRequest) returns (stream StreamingWorkflowResponse);
+
+    // Run a stored workflow configuration and return the URLs its output is published at
+    rpc InvokeWorkflowConfiguration (InvokeWorkflowConfigurationRequest) returns (InvokeWorkflowConfigurationResponse);
+
+    // Get the result of a workflow configuration run by invocation id
+    rpc InvokeWorkflowConfigurationResult (InvokeWorkflowConfigurationResultRequest) returns (InvokeWorkflowConfigurationResultResponse);
+
+    // Answer a chat conversation
     rpc Chat (ChatRequest) returns (ChatResponse);
+    // Answer a chat conversation, streaming the answer
     rpc ChatStreaming (ChatRequest) returns (stream StreamingChatResponse);
 }
 
-// Estimate the cost of generating a specific report
+// Request to estimate the credit cost of a report
 message GetReportCreditEstimateRequest {
-    // Report configuration
+    // The report configuration
     string report_configuration = 1;
 }
 
+// The estimated credit cost of generating the report
 message GetReportCreditEstimateResponse {
-    // The estimated cost of generating the report
+    // The estimated credit cost of generating the report
     int32 credit_cost = 1;
 }
 
 // Schedule the generation of a report
 message ScheduleReportGenerationRequest {
-    // Report configuration
+    // The report configuration
     string report_configuration = 1;
 }
 
+// Request to schedule a workflow run
 message ScheduleWorkflowRequest {
+    // The workflow to run
     string workflow_id = 1;
+    // The parameters to run the workflow with
     map<string, string> parameters = 5;
-    // Add additional parameters required to schedule
 }
 
+// Request to run a workflow
 message WorkflowRequest {
+    // The workflow to run
     string workflow_id = 1;
+    // The parameters to run the workflow with
     map<string, string> parameters = 5;
 }
 
 // Request for getting workflow metadata
 message ViewWorkflowRequest {
-    // The ID of the workflow being interrogated.
-    // 
-    // Leave empty to view all workflows associated with account.
+    // The workflow to describe
     string workflow_id = 1;
 }
 
 // Response for getting workflow metadata
 message ViewWorkflowResponse {
+    // The matching workflows
     repeated Workflow workflows = 1;
 }
 
-// The metadata associated with a given workflow.
+// The metadata associated with a workflow
 message Workflow {
-    // The workflow's ID.
+    // The workflow id
     string id = 1;
-    // The workflow's human-readable name.
+    // The workflow's human-readable name
     string name = 2;
-    // The parameters that can/should be passed to the workflow.
+    // The parameters the workflow accepts
     repeated WorkflowParameter parameters = 3;
 }
 
-// A parameter to be passed to a workflow.
+// A parameter to be passed to a workflow
 message WorkflowParameter {
-    // The name of the parameter.
+    // The parameter name
     string name = 1;
-    // The type of the parameter.
+    // The parameter type
     WorkflowParameterType type = 2;
-    // The parameter's default value (parsed into a string).
-    //
-    // If the parameter has no default value - and so is non-optional - then
-    // this will be an empty string.
+    // The parameter's default value
     string default_value = 3;
-    // An example value for the parameter (parsed into a string).
-    //
-    // If the parameter has no example value then this will be an empty string.
+    // An example value for the parameter
     string example_value = 4;
-    // Allowed values for this parameter (parsed into strings).
-    //
-    // If the parameter has no allowed values - i.e. it's unconstrained - then
-    // this will be an empty list.
+    // The values the parameter accepts
     repeated string allowed_values = 5;
 }
 
-// Possible types for a workflow parameter.
+// The type of a workflow parameter
 enum WorkflowParameterType {
     BOOLEAN = 0;
     INTEGER = 1;
@@ -113,52 +120,114 @@ enum WorkflowParameterType {
     OBJECT = 5;
 }
 
+// A chunk of streamed workflow output
 message StreamingWorkflowResponse {
+    // The next piece of output
     string buffer = 1;
+    // Whether this is the last chunk
     bool final = 5;
 }
 
+// A chat conversation to answer
 message ChatRequest {
+    // The chat workflow to answer with
     string chat_workflow = 1;
+    // The messages in the conversation so far
     repeated ChatMessage message = 10;
+    // The parameters to run the chat workflow with
     map<string, string> parameters = 15;
 }
 
+// A single message in a chat conversation
 message ChatMessage {
+    // Who wrote the message
     ChatRole role = 1;
+    // The message text
     string content = 2;
 }
 
+// The author of a chat message
 enum ChatRole {
     CHAT_ROLE_USER = 0;
     CHAT_ROLE_ASSISTANT = 1;
 }
 
+// The answer to a chat conversation
 message ChatResponse {
+    // The answer
     string answer = 1;
 }
 
+// A chunk of a streamed chat answer
 message StreamingChatResponse {
+    // The next piece of the answer
     string buffer = 1;
+    // Whether this is the last chunk
     bool final = 5;
 }
 
+// The job id of a dispatched async run
 message InvokeWorkflowAsyncResponse {
+    // The job id
     string job_id = 1;
 }
 
+// Request for the result of an async run
 message InvokeWorkflowAsyncResultRequest {
+    // The workflow the job runs
     string workflow_id = 1;
+    // The job id returned when the run was dispatched
     string job_id = 2;
 }
 
-enum InvokeWorkflowAsyncResultStatus{
+// The status of an async run
+enum InvokeWorkflowAsyncResultStatus {
     INVOKE_WORKFLOW_ASYNC_RESULT_STATUS_SUBMITTED = 0;
     INVOKE_WORKFLOW_ASYNC_RESULT_STATUS_ERROR     = 1;
     INVOKE_WORKFLOW_ASYNC_RESULT_STATUS_FINISHED  = 2;
     INVOKE_WORKFLOW_ASYNC_RESULT_STATUS_NOT_FOUND = 3;
 }
+
+// The status of an async run and its result
 message InvokeWorkflowAsyncResultResponse {
+    // The run status
     InvokeWorkflowAsyncResultStatus status = 1;
+    // The workflow's response
     ai.sigmafinancial.aima.v3.generative.services.InvokeWorkflowResponse result = 2;
+}
+
+// Request to run a stored configuration
+message InvokeWorkflowConfigurationRequest {
+    // The configuration to run
+    string configuration_id = 1;
+}
+
+// The invocation of a stored configuration and the URLs its output is published at
+message InvokeWorkflowConfigurationResponse {
+    // The invocation that produced the output
+    string invocation_id = 1;
+    // The configuration revision it ran under
+    uint32 revision = 2;
+    // The stable URL for the configuration's current output
+    string pointer_url = 3;
+    // The permanent URL for this invocation's output
+    string version_url = 4;
+}
+
+// Request for the result of a stored configuration run
+message InvokeWorkflowConfigurationResultRequest {
+    // The invocation id returned by InvokeWorkflowConfiguration
+    string invocation_id = 1;
+}
+
+// The status of a stored configuration run and the URL of its output
+message InvokeWorkflowConfigurationResultResponse {
+    // The invocation that produced the output
+    string invocation_id = 1;
+    // The configuration revision it ran under
+    uint32 revision = 2;
+    // The invocation status
+    InvokeWorkflowAsyncResultStatus status = 3;
+    // The permanent URL for this invocation's output
+    string version_url = 4;
 }

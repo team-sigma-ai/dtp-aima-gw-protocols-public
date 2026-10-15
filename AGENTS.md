@@ -68,10 +68,11 @@ Changes here alter the published external contract; treat them accordingly.
 - **Branching.** Branch `feature/<id>` (or `fix/` / `chore/`) off `main`, and
   keep `main` linear (rebase, never merge commits). Open a PR to `main`.
 - **Keep it minimal; it's external-facing.**
-  - *Comments:* the absolute minimum, purpose and intent only, in the existing
-    house style (`// The token id`). No rationale, no "why", no design-doc
-    references, no ticket numbers in the proto. Fuller reasoning lives in design
-    docs or the internal protocols repo.
+  - *Comments:* exactly one single-line comment above each service, RPC,
+    message, enum and field, saying what it is for (`// The token id`). No
+    reasons, allowed values, limits or defaults, and none on enum values. No
+    rationale, no "why", no design-doc references, no ticket numbers in the
+    proto. Fuller reasoning lives in design docs or the internal protocols repo.
   - *PR descriptions:* the same rule. Give a plain changelog of what was added
     (new messages, services, RPCs); no rationale, no cross-references. A linked
     ticket may carry the internal detail, but is not required here.
@@ -82,7 +83,8 @@ Changes here alter the published external contract; treat them accordingly.
 - **A new shape means a new `vN` package**, never a breaking edit to a frozen
   version.
 - **Deprecation.** Mark a superseded field with the proto `[deprecated = true]`
-  option, and a brief `// …` comment (name the replacement where there is one).
+  option; its comment says what it is plus "deprecated", naming any replacement
+  (`// The key's scope; deprecated`).
   This deliberately emits a deprecation attribute in generated stubs: that
   warning is the signal for consumers to migrate, so a build that denies warnings
   is meant to act on it. Keep the field on the wire, its number and type

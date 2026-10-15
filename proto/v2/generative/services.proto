@@ -5,19 +5,22 @@ package ai.sigmafinancial.aima.v2.generative.services;
 import "google/protobuf/struct.proto";
 import "dtp-aima-gw-protocols-shared/proto/v2/common.proto";
 
+// Workflow invocation
 service Generative {
+    // Run a workflow
     rpc InvokeWorkflow (WorkflowRequest) returns (common.ReportResponse);
 }
 
+// Request to run a workflow
 message WorkflowRequest {
+    // The workflow to run
     string workflow_id = 1;
+    // The parameters to run the workflow with
     google.protobuf.Struct parameters = 5;
 }
 
 // Request for getting workflow metadata
 message ViewWorkflowRequest {
-    // The ID of the workflow being interrogated.
-    // 
-    // Leave empty to view all workflows associated with account.
+    // The workflow to describe
     string workflow_id = 1;
 }

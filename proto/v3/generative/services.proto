@@ -2,27 +2,13 @@ syntax = "proto3";
 
 package ai.sigmafinancial.aima.v3.generative.services;
 
-// ─────────────────────────────────────────────────────────────────────────
-// Generative v3 — public service.
-//
-// The request/response message types live in `shared` (see
-// dtp-aima-gw-protocols-shared/proto/v3/generative/messages.proto) and are
-// imported here under the same package, so they can be reused across multiple
-// service versions.
-//
-// v3 makes both halves of a workflow self-describing:
-//   * ViewWorkflow returns, per workflow, the SCHEMA of its input parameters
-//     AND of its response structure.
-//   * InvokeWorkflow returns a strongly-typed structured response whose
-//     `content` conforms to that schema.
-// ─────────────────────────────────────────────────────────────────────────
-
 import "dtp-aima-gw-protocols-shared/proto/v3/generative/messages.proto";
 
+// Self-describing workflow discovery and invocation
 service Generative {
-    // Get workflow metadata: input-parameter schema and response schema.
+    // Get workflow metadata: input-parameter schema and response schema
     rpc ViewWorkflow (ViewWorkflowRequest) returns (ViewWorkflowResponse);
 
-    // Run a workflow and return its strongly-typed structured response.
+    // Run a workflow and return its structured response
     rpc InvokeWorkflow (InvokeWorkflowRequest) returns (InvokeWorkflowResponse);
 }

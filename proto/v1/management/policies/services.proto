@@ -5,14 +5,15 @@ package ai.sigmafinancial.aima.v1.management.policy.services;
 import "dtp-aima-gw-protocols-shared/proto/common/basic.proto";
 import "dtp-aima-gw-protocols-shared/proto/v1/management/policies/messages.proto";
 
+// Authoring of access policies and account boundary policies
 service PolicyManagement {
     // Create a policy from a set of SRN statements
     rpc CreatePolicy (CreatePolicyRequest) returns (CreatePolicyResponse);
     // Fetch a policy by id
     rpc GetPolicy (GetPolicyRequest) returns (GetPolicyResponse);
-    // List policies, optionally filtered by owning account
+    // List policies
     rpc ListPolicies (ListPoliciesRequest) returns (ListPoliciesResponse);
-    // Delete a policy; fails if an App Key is still bound to it
+    // Delete a policy
     rpc DeletePolicy (DeletePolicyRequest) returns (.ai.sigmafinancial.aima.common.Empty);
     // Bind an App Key to a policy
     rpc BindAppKey (BindAppKeyRequest) returns (.ai.sigmafinancial.aima.common.Empty);
@@ -22,26 +23,27 @@ service PolicyManagement {
     rpc GetAccountBoundaryPolicy (GetAccountBoundaryPolicyRequest) returns (GetAccountBoundaryPolicyResponse);
 }
 
+// Request to read an account's boundary policy
 message GetAccountBoundaryPolicyRequest {
-    // The account whose boundary policy is being read
+    // The account whose boundary policy is read
     string account_id = 1;
 }
 
+// An account's boundary policy and its effective ceiling
 message GetAccountBoundaryPolicyResponse {
-    // The account's authored ABP allow statements
+    // The account's ABP allow statements
     repeated string statements = 1;
-    // The account's materialised effective ceiling allow set
+    // The account's effective ceiling allow set
     repeated string effective = 5;
-    // The account's authored ABP deny statements
+    // The account's ABP deny statements
     repeated string statement_denies = 10;
-    // The materialised effective ceiling deny set
+    // The account's effective ceiling deny set
     repeated string effective_denies = 15;
 }
 
-// Policy and Statement are defined in shared/proto/v1/management/policies/messages.proto (same package).
-
+// Request to create a policy
 message CreatePolicyRequest {
-    // The account that will own the policy
+    // The account that owns the policy
     string owner_id = 1;
     // The SRN statements to grant
     repeated string statements = 5;
@@ -49,36 +51,43 @@ message CreatePolicyRequest {
     repeated string statement_denies = 10;
 }
 
+// The created policy
 message CreatePolicyResponse {
     // The created policy
     Policy policy = 1;
 }
 
+// Request to fetch a policy
 message GetPolicyRequest {
     // The policy to fetch
     string policy_id = 1;
 }
 
+// The requested policy
 message GetPolicyResponse {
     // The requested policy
     Policy policy = 1;
 }
 
+// Request to list policies
 message ListPoliciesRequest {
-    // Filter to policies owned by this account; empty for all visible
+    // The owning account to filter by
     string owner_id = 1;
 }
 
+// The matching policies
 message ListPoliciesResponse {
     // The matching policies
     repeated Policy policies = 1;
 }
 
+// Request to delete a policy
 message DeletePolicyRequest {
     // The policy to delete
     string policy_id = 1;
 }
 
+// Request to bind an App Key to a policy
 message BindAppKeyRequest {
     // The App Key to bind
     string app_key_id = 1;
@@ -86,13 +95,12 @@ message BindAppKeyRequest {
     string policy_id = 5;
 }
 
+// Request to replace an account's boundary policy
 message UpdateAccountBoundaryPolicyRequest {
-    // The account whose boundary policy is being replaced
+    // The account whose boundary policy is replaced
     string account_id = 1;
     // The SRN statements to grant
     repeated string statements = 5;
     // The SRN statements to deny
     repeated string statement_denies = 10;
 }
-
-// UpdateAccountBoundaryPolicyResponse is defined in shared/proto/v1/management/policies/messages.proto (same package).

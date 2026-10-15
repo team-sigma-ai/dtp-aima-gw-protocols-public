@@ -7,55 +7,66 @@ import "dtp-aima-gw-protocols-shared/proto/v1/account.proto";
 import "dtp-aima-gw-protocols-shared/proto/v1/management/users/messages.proto";
 import "dtp-aima-gw-protocols-shared/proto/v1/common.proto";
 
+// Management of accounts, users, invites and sign-up allow/deny lists
 service UserManagement {
-    // Accounts
+    // List accounts
     rpc ListAccounts (ListAccountsRequest) returns (ListAccountsResponse);
+    // Create an account
     rpc CreateAccount (CreateAccountRequest) returns (CreateAccountResponse);
 
-    // Users
+    // List users
     rpc ListUsers (ListUsersRequest) returns (ListUserResponse);
+    // Delete a user or invite
     rpc DeleteUser (DeleteEntryRequest) returns (common.Empty);
 
-    // Invites
+    // List invites
     rpc ListInvites (common.Empty) returns (ListInvitesResponse);
+    // Invite a user by email
     rpc InviteUser (InviteUserRequest) returns (common.Empty);
+    // Delete an invite
     rpc DeleteInvite (DeleteEntryRequest) returns (common.Empty);
 
-    // Invite Allow/Deny Lists
-
-    // List the domains that can signup via SSO or the denied email addresses from deleted users
+    // List the SSO sign-up allow list or the email deny list
     rpc ListEmailEntryList (ListEmailEntriesRequest) returns (ListEmailEntriesResponse);
-    // Add or remove an email or domain from the allow/deny list
+    // Add or remove an email or domain on the allow/deny list
     rpc UpdateEmailEntries (EmailListEntryRequest) returns (common.Empty);
 }
 
+// Request to list accounts by owner, parent or id
 message ListAccountsRequest {
     oneof search_type {
+        // List the account that owns the calling App Key
         bool app_key_owner = 1;
+        // List child accounts
         ListChildAccounts child_accounts = 2;
+        // List specific accounts by id
         ListSpecificAccounts specific_accounts = 3;
     }
 }
 
+// A search for child accounts
 message ListChildAccounts {
-    // Restrict the child list to only accounts under this parent
-    // If empty, return all child accounts that are under the app key owner
+    // The parent to list child accounts under
     string parent_id = 1;
-    // Limit the depth of the search to a value, if 0 (default) all children are returned.
-    // If a parent ID is specified, the depth starts at that level.
-    // Otherwise, the depth is calculated from the app key owner level.
+    // How many levels of children to search
     uint32 depth = 2;
 }
 
+// A search for specific accounts by id
 message ListSpecificAccounts {
+    // The account ids to fetch
     repeated string account_id_list = 1;
 }
 
+// The matching accounts
 message ListAccountsResponse {
+    // The matching accounts
     repeated .ai.sigmafinancial.aima.v1.user.Account accounts = 1;
 }
 
+// Request to create an account with its boundary policy (ABP)
 message CreateAccountRequest {
+    // The account to create
     ai.sigmafinancial.aima.v1.user.NewAccount create = 1;
     // The SRN statements that become the account's boundary policy (ABP)
     repeated string statements = 5;
@@ -63,13 +74,11 @@ message CreateAccountRequest {
     repeated string statement_denies = 10;
 }
 
-// CreateAccountResponse is defined in shared/proto/v1/management/users/messages.proto (same package).
-
-// Lists the keys that match the given filters, if any
+// Request to list the users that match the given filters
 message ListUsersRequest {
-    // This field has no effect
+    // The scopes to filter by; deprecated
     repeated int32 scope = 1 [deprecated = true];
-    // Filters the users by when they were created
+    // Filter to users created after this time, in Unix epoch seconds
     int64 created_after = 5;
     // Filter users by name
     string name = 10;
@@ -77,57 +86,58 @@ message ListUsersRequest {
     string email = 15;
 }
 
+// The users that match the request
 message ListUserResponse {
     // The users that match the request
     repeated ai.sigmafinancial.aima.v1.user.User users = 1;
 }
 
-// Invites a user to the system, an email will be sent to the user
-// containing a link to create an account,
-// By default the user will have no scope
-// after the user finishes sign-up you can assign a scope to the user
+// Request to invite a user by email to create an account
 message InviteUserRequest {
-    // The email of the user to invite
+    // The email of the person to invite
     string email = 1;
     // The name of the person to invite
     string name = 5;
 }
 
+// The invites that match the request
 message ListInvitesResponse {
     // The invites that match the request
     repeated Invite invites = 1;
 }
 
+// An invite
 message Invite {
-    // The ID of the invite
+    // The invite id
     string id = 1;
-    // The email of the user that was invited
+    // The email address that was invited
     string email = 5;
 }
 
-// Deletes the user/invite with the given id,
-// it does _not_ delete the keys (and subsequently the tokens) created by the user
-// This also puts the email of the user in a blacklist so the user can't sign up again
+// Request to delete a user or invite
 message DeleteEntryRequest {
-    // The User ID or invite ID to delete
+    // The user or invite to delete
     string entry_id = 1;
 }
 
-// Lists the Allow/Deny list of emails or domains
+// Request to list the allow or deny list of emails or domains
 message ListEmailEntriesRequest {
+    // Whether to list the deny list rather than the allow list
     bool deny_list = 1;
 }
 
+// The entries on the requested list
 message ListEmailEntriesResponse {
+    // The emails or domains on the list
     repeated string email_or_domain = 1;
 }
 
-// Deletes the entry from the Allow/Deny list
+// Request to add or remove an entry on the allow or deny list
 message EmailListEntryRequest {
-    // Domain for the allow list, email address for the deny list
+    // The domain for the allow list, or email address for the deny list
     string email_or_domain = 1;
-    // Specify which list to delete from
+    // Whether the entry is on the deny list rather than the allow list
     bool deny_list = 5;
-    // If true, the entry will be deleted from the list
+    // Whether to remove the entry rather than add it
     bool delete = 10;
 }

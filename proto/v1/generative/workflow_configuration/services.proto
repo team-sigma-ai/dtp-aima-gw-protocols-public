@@ -1,0 +1,54 @@
+syntax = "proto3";
+
+package ai.sigmafinancial.aima.v1.generative.workflow_configuration.services;
+
+import "dtp-aima-gw-protocols-shared/proto/v1/generative/workflow_configuration/messages.proto";
+import "dtp-aima-gw-protocols-shared/proto/v1/common.proto";
+
+// Authoring and lifecycle of stored workflow configurations
+service WorkflowConfiguration {
+    // Create a configuration
+    rpc CreateConfiguration (CreateConfigurationRequest) returns (CreateConfigurationResponse);
+
+    // List the configurations on the account
+    rpc ListConfigurations (ListConfigurationsRequest) returns (ListConfigurationsResponse);
+
+    // Get one configuration and its current revision
+    rpc GetConfiguration (GetConfigurationRequest) returns (GetConfigurationResponse);
+
+    // List a configuration's revisions
+    rpc ListConfigurationRevisions (ListConfigurationRevisionsRequest) returns (ListConfigurationRevisionsResponse);
+
+    // Get one revision and its parameter values
+    rpc GetConfigurationRevision (GetConfigurationRevisionRequest) returns (GetConfigurationRevisionResponse);
+
+    // Update a configuration, creating a new revision
+    rpc ReviseConfiguration (ReviseConfigurationRequest) returns (ReviseConfigurationResponse);
+
+    // Enable or disable a configuration
+    rpc ToggleConfigurationStatus (ToggleConfigurationStatusRequest) returns (ToggleConfigurationStatusResponse);
+
+    // Destroy a configuration's stored output, keeping the configuration
+    rpc PurgeConfiguration (PurgeConfigurationRequest) returns (PurgeConfigurationResponse);
+
+    // Get the progress of a purge
+    rpc GetPurgeOperation (GetPurgeOperationRequest) returns (GetPurgeOperationResponse);
+}
+
+// Access to a configuration's published outputs
+service OutputLink {
+    // List a configuration's outputs and their permanent URLs
+    rpc ListOutputVersions (ListOutputVersionsRequest) returns (ListOutputVersionsResponse);
+
+    // Create an expiring link to a configuration's output
+    rpc CreateExpiringLink (CreateExpiringLinkRequest) returns (CreateExpiringLinkResponse);
+
+    // List the expiring links for a configuration or invocation
+    rpc ListExpiringLinks (ListExpiringLinksRequest) returns (ListExpiringLinksResponse);
+
+    // Delete an expiring link
+    rpc DeleteExpiringLink (DeleteExpiringLinkRequest) returns (common.Empty);
+
+    // Get the progress of an expedited operation
+    rpc GetExpeditedOperation (GetExpeditedOperationRequest) returns (GetExpeditedOperationResponse);
+}

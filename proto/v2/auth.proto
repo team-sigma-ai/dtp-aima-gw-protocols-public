@@ -2,23 +2,25 @@ syntax = "proto3";
 
 package ai.sigmafinancial.aima.v2.auth;
 
+// A signed token
 message Token {
-    // Encoded token data
+    // The encoded token data
     string encoded_token_data = 5;
-    // Token signature
+    // The token signature
     string signature = 10;
 }
 
+// The contents of a token
 message TokenData {
-    // The token ID
+    // The token id
     string id = 1;
-    // The ID of the system that signed the token
+    // The id of the server key that signed the token
     string token_signature_id = 5;
-    // The App Key used to create the token
+    // The App Key the token was created from
     string derived_from = 10;
-    // When the token was issued
+    // When the token was issued, in Unix epoch seconds
     int64 created = 15;
-    // When the token expires
+    // When the token expires, in Unix epoch seconds
     int64 expires = 20;
     // The policies the token's scope resolves to
     repeated string policy_id = 25;
