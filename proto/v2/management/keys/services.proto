@@ -5,46 +5,40 @@ package ai.sigmafinancial.aima.v2.management.key.services;
 import "dtp-aima-gw-protocols-public/proto/v2/auth.proto";
 import "dtp-aima-gw-protocols-shared/proto/common/basic.proto";
 
+// Token issue and verification
 service KeyManagement {
     // Issue a token for an App Key
     rpc IssueToken (IssueTokenRequest) returns (IssueTokenResponse);
-    // Verify that a token contains a valid signature. Token should be extracted
-    // from auth header in request.
+    // Verify the signature of the token in the request's auth header
     rpc VerifyToken (.ai.sigmafinancial.aima.common.Empty) returns (VerifyTokenResponse);
 }
 
+// Request for a token, signed with the App Key's private key
 message IssueTokenRequest {
-    // The API Key ID to create a token from
+    // The App Key to issue the token from
     string app_key_id = 1;
-
-    // The current time in epoch seconds, max allowed clock-skew with server is 60 seconds.
+    // The current time, in Unix epoch seconds
     int64 epoch_time = 3;
-
-    // Number used once, sending the request again with the same nonce will be refused.
+    // A number used once
     int64 nonce = 4;
-
-    // Generate a signature string by concatenating "{app_key_id}{epoch_time}{nonce}"
-    // and signing the resulting string with the private key part of the App Key
+    // The request signature, made with the App Key's private key
     string signature = 5;
-
-    // The duration (in seconds) the token should live for
+    // How long the token lives, in seconds
     int64 life_span = 15;
 }
 
+// The issued token
 message IssueTokenResponse {
-    // The token that was created
+    // The issued token
     auth.Token token = 1;
-
-    // The token data for introspection.
+    // The token data, for introspection
     auth.TokenData token_data = 5;
-
-    // A ready-to-use Base64 representation of the token, we recommend you use
-    // this instead of serializing the token yourself. It will significantly reduce
-    // the risk of issues caused by languages, encoding and future changes.
+    // The token as a ready-to-use Base64 string
     string token_string = 10;
 }
 
+// The verified token
 message VerifyTokenResponse {
-    // The token that was verified, serialized as it should appear in an auth header.
+    // The verified token, serialised as it appears in an auth header
     string token = 1;
 }

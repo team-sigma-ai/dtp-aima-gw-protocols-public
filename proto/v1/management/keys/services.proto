@@ -7,86 +7,155 @@ import "dtp-aima-gw-protocols-shared/proto/v1/auth.proto";
 import "dtp-aima-gw-protocols-shared/proto/v1/management/keys/messages.proto";
 import "dtp-aima-gw-protocols-shared/proto/v1/common.proto";
 
+// App Key and token management
 service KeyManagement {
+    // List the App Keys in the account
     rpc List (ListKeysRequest) returns (ListKeysResponse);
+    // Create an App Key
     rpc Create (CreateKeyRequest) returns (CreateKeyResponse);
+    // Delete revoked keys
     rpc Delete (DeleteKeysRequest) returns (common.Empty);
+    // Issue a temporary token
     rpc IssueToken (IssueTokenRequest) returns (IssueTokenResponse);
-    // Verify that a token contains a valid signature. Token should be extracted
-    // from auth header in request.
+    // Verify the signature of the token in the request's auth header
     rpc VerifyToken (common.Empty) returns (VerifyTokenResponse);
+    // Describe a key
+    rpc Describe (DescribeRequest) returns (DescribeResponse);
+    // Revoke a key
+    rpc Revoke (RevokeRequest) returns (RevokeResponse);
+    // Revive a revoked key
+    rpc Revive (ReviveRequest) returns (ReviveResponse);
 }
 
-// Lists the keys that match the given filters, if any
+// Request to list the keys that match the given filters
 message ListKeysRequest {
-    // This field has no effect
+    // The scopes to filter by; deprecated, use `policy_id`
     repeated int32 scope = 1 [deprecated = true];
-    // Filters the keys by ID if provided
+    // The key ids to filter by
     repeated string id = 2;
-    // Filters the keys by when they were created or expire
+    // Filter to keys created after this time, in Unix epoch seconds
     int64 created_after = 5;
+    // Filter to keys expiring before this time, in Unix epoch seconds
     int64 expires_before = 10;
-    // Filter for keys bound to a policy.
+    // Filter to keys bound to this policy
     string policy_id = 20;
 }
 
+// The keys that match the request
 message ListKeysResponse {
     // The keys that match the request
     repeated auth.AppKey keys = 1;
 }
 
-// Creates a new key with the given scope and expiration time (if none is provided, the key will never expire)
-// A new key can never have more scope than the one of the key used to create it, only the same or smaller.
+// Request to create a key, in the caller's account or a child account
 message CreateKeyRequest {
-    // This field has no effect
+    // The key's scope; deprecated, use `policy_id`
     repeated int32 scope = 1 [deprecated = true];
-    // The time the key will expire
+    // When the key expires, in Unix epoch seconds
     int64 expires = 5;
-    // The account this key will belong to, it can only be the account used to create it, or a child account
-    // If not provided, it will belong to the account that owns the key used to call this endpoint
+    // The account the key belongs to
     string account_id = 10;
-    // The policy to bind the key to at creation.
+    // The policy to bind the key to
     string policy_id = 20;
 }
 
-// CreateKeyResponse is defined in shared/proto/v1/management/keys/messages.proto (same package).
-
-// Deletes the keys with the given key_ids
-// This will immediately invalidate the keys
-// and any tokens created with them
+// Request to delete revoked keys
 message DeleteKeysRequest {
     // The keys to delete
     repeated string key_ids = 1;
 }
 
+// Request for a token, signed with the App Key's private key
 message IssueTokenRequest {
-    // The API Key ID to create a token from
+    // The App Key to issue the token from
     string app_key_id = 1;
-
-    // The current time in epoch seconds, max allowed clock-skew with server is 60 seconds.
+    // The current time, in Unix epoch seconds
     int64 epoch_time = 3;
-
-    // Number used once, sending the request again with the same nonce will be refused.
+    // A number used once
     int64 nonce = 4;
-
-    // Generate a signature string by concatenating "{app_key_id}{epoch_time}{nonce}"
-    // and signing the resulting string with the private key part of the App Key
+    // The request signature, made with the App Key's private key
     string signature = 5;
-
-    // This field has no effect
+    // The token's scope; deprecated
     repeated int32 scope = 10 [deprecated = true];
-
-    // The duration (in seconds) the token should live for
+    // How long the token lives, in seconds
     int64 life_span = 15;
-
 }
 
+// The issued token
 message IssueTokenResponse {
-    // The token that was created
+    // The issued token
     auth.Token token = 1;
 }
 
+// The verified token
 message VerifyTokenResponse {
-    // The token that was verified, serialized as it should appear in an auth header.
+    // The verified token, serialised as it appears in an auth header
     string token = 1;
+}
+
+// Request to describe an App Key
+message DescribeRequest {
+    // The key to describe
+    string key_id = 1;
+}
+
+// A key, when it was last used and the resources bound to it
+message DescribeResponse {
+    // The described key
+    auth.AppKey key = 1;
+    // When the key or a token derived from it was last used, in Unix epoch seconds
+    int64 last_used = 15;
+    // The resources bound to the key
+    repeated BoundResource bound_resources = 20;
+    // The total number of resources bound to the key
+    uint32 bound_resource_count = 25;
+}
+
+// Request to revive a revoked App Key
+message ReviveRequest {
+    // The key to revive
+    string key_id = 1;
+    // Whether to validate without reviving
+    ai.sigmafinancial.aima.v1.common.DryRun dry_run = 5;
+}
+
+// The outcome of a revive
+message ReviveResponse {
+    // The request's dry-run flag, echoed
+    ai.sigmafinancial.aima.v1.common.DryRun dry_run = 1;
+    // Whether the key is active again
+    bool revived = 5;
+    // The key as it now stands
+    auth.AppKey key = 10;
+}
+
+// Request to revoke an App Key and invalidate its tokens
+message RevokeRequest {
+    // The key to revoke
+    string key_id = 1;
+    // Whether to report what is bound without revoking
+    ai.sigmafinancial.aima.v1.common.DryRun dry_run = 5;
+}
+
+// The outcome of a revoke
+message RevokeResponse {
+    // The request's dry-run flag, echoed
+    ai.sigmafinancial.aima.v1.common.DryRun dry_run = 1;
+    // Whether the key is now revoked
+    bool revoked = 5;
+    // The resources still bound to the key
+    repeated BoundResource bound_resources = 10;
+    // The total number of resources still bound to the key
+    uint32 bound_resource_count = 15;
+    // When the key or a token derived from it was last used, in Unix epoch seconds
+    int64 last_used = 20;
+    // Why the revoke failed
+    RevokeError error = 25;
+}
+
+// Reason a revoke failed
+enum RevokeError {
+    REVOKE_ERROR_NONE = 0;
+    REVOKE_ERROR_UNKNOWN = 1;
+    REVOKE_ERROR_KEY_IN_USE = 2;
 }

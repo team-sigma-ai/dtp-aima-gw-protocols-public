@@ -2,12 +2,11 @@ syntax = "proto3";
 
 package ai.sigmafinancial.aima.v1.user;
 
-// NewAccount and Account are defined in shared/proto/v1/account.proto (same package).
-
+// A user within an account
 message User {
-    // The user ID
+    // The user id
     string id = 1;
-    // Account the user belongs to
+    // The account the user belongs to
     string account_id = 3;
     // The user's email
     string email = 5;
@@ -15,8 +14,8 @@ message User {
     string first_name = 10;
     // The user's last name
     string last_name = 15;
-    // SSO ID
+    // The user's SSO id
     string sso_id = 20;
-    // Date user was created
+    // When the user was created, in Unix epoch seconds
     int64 created = 25;
 }
