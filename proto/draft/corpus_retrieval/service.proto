@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-// Draft API with no stability guarantee
+// Corpus retrieval draft API spec
 package ai.sigmafinancial.aima.draft.corpus_retrieval.services;
 
 import "dtp-aima-gw-protocols-shared/proto/draft/corpus_retrieval/messages.proto";
